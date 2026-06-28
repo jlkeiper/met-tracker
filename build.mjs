@@ -280,9 +280,175 @@ async function main() {
 
   console.log(`Roster: ${roster.length} people (${roster.filter(r => r.tier === "confirmed").length} confirmed, ${roster.filter(r => r.tier === "recognize").length} recognize)`);
 
-  // 4. Generate the HTML
+  // 4. Side events, mixers, and parties
+  const events = [
+    // Day 0 — Sunday Jun 28
+    {
+      day: "Day 0 — Sun Jun 28",
+      title: "New Engineer Orientation (NEO)",
+      time: "7:00 PM – 9:00 PM",
+      location: "Moscone West",
+      type: "orientation",
+      description: "Meet fellow first-timers, get the lay of the land, and pick up your badge early.",
+      rsvp: "https://luma.com/aie-neo-irl",
+    },
+    {
+      day: "Day 0 — Sun Jun 28",
+      title: "Early Badge Pickup",
+      time: "5:00 PM – 9:00 PM",
+      location: "Moscone West",
+      type: "logistics",
+      description: "Skip the Monday morning line. Grab your badge Sunday evening.",
+      rsvp: null,
+    },
+    // Day 1 — Monday Jun 29
+    {
+      day: "Day 1 — Mon Jun 29",
+      title: "Sonar x Extend Welcome Reception",
+      time: "4:00 PM – 7:30 PM",
+      location: "Expo Floor, Moscone West",
+      type: "reception",
+      description: "Opening night mixer on the expo floor. Drinks, demos, and first connections.",
+      rsvp: null,
+    },
+    {
+      day: "Day 1 — Mon Jun 29",
+      title: "Oxylabs VIP Reception",
+      time: "6:00 PM – 9:00 PM",
+      location: "TBA",
+      type: "vip",
+      description: "Invite-only VIP reception hosted by Oxylabs.",
+      rsvp: null,
+    },
+    {
+      day: "Day 1 — Mon Jun 29",
+      title: "Firecrawl Speaker Dinner",
+      time: "7:00 PM – 10:30 PM",
+      location: "TBA",
+      type: "dinner",
+      description: "Intimate speaker dinner hosted by Firecrawl. Great for meeting speakers in a small setting.",
+      rsvp: null,
+    },
+    {
+      day: "Day 1 — Mon Jun 29",
+      title: "Qodo: AIE Opening Night VIP Event",
+      time: "7:00 PM – 9:30 PM",
+      location: "Grand Hall",
+      type: "vip",
+      description: "Exclusive evening reception with AI engineering leaders. Limited to 100 approved guests.",
+      rsvp: null,
+    },
+    {
+      day: "Day 1 — Mon Jun 29",
+      title: "AI Engineer Pre-Party w/ Heavybit & Continue",
+      time: "Evening",
+      location: "San Francisco",
+      type: "party",
+      description: "Pre-conference happy hour with bites, drinks, and conversation with builders and founders.",
+      rsvp: "https://luma.com/ai-engineer-summit-pre-party",
+    },
+    // Day 2 — Tuesday Jun 30
+    {
+      day: "Day 2 — Tue Jun 30",
+      title: "Onsite Networking Night",
+      time: "5:00 PM – 7:30 PM",
+      location: "Moscone West",
+      type: "mixer",
+      description: "Official on-site networking event. The biggest hallway-track moment of the conference.",
+      rsvp: null,
+    },
+    {
+      day: "Day 2 — Tue Jun 30",
+      title: "Optiver: The Agentic SDLC Loop",
+      time: "7:30 PM – 10:30 PM",
+      location: "TBA",
+      type: "side-event",
+      description: "Matt Nassr hosts a deep dive on context, evaluation, execution, and governance for agentic SDLC. Highly relevant to APEX work.",
+      rsvp: null,
+    },
+    {
+      day: "Day 2 — Tue Jun 30",
+      title: "Cerebral Valley & Shack15 Private Evening",
+      time: "6:00 PM – 10:00 PM",
+      location: "Shack15, San Francisco",
+      type: "party",
+      description: "Private evening for founders, engineers, and researchers. Ideas, demos, and late-night conversations.",
+      rsvp: null,
+    },
+    {
+      day: "Day 2 — Tue Jun 30",
+      title: "AI + Infrastructure Leaders Dinner",
+      time: "Evening",
+      location: "San Francisco",
+      type: "dinner",
+      description: "VPs, directors, and technical founders discuss production AI challenges and reliability.",
+      rsvp: "https://luma.com/unm1hdg2",
+    },
+    {
+      day: "Day 2 — Tue Jun 30",
+      title: "Anthropic + AWS Startups Happy Hour",
+      time: "Evening",
+      location: "San Francisco",
+      type: "mixer",
+      description: "Happy hour co-hosted by Anthropic and AWS for startup founders and engineers.",
+      rsvp: "https://luma.com/anthropicAIworldfair",
+    },
+    // Day 3 — Wednesday Jul 1
+    {
+      day: "Day 3 — Wed Jul 1",
+      title: "World Cup Quarterfinal VIP Suite",
+      time: "4:00 PM – 7:00 PM",
+      location: "Moscone West (or Levi's Stadium — invite only)",
+      type: "watch-party",
+      description: "Watch the World Cup quarterfinal with fellow attendees. VIP suite is invite-only / sponsorship.",
+      rsvp: null,
+    },
+    {
+      day: "Day 3 — Wed Jul 1",
+      title: "Stripe x Metronome Startup Night",
+      time: "6:00 PM – 9:00 PM",
+      location: "San Francisco",
+      type: "mixer",
+      description: "Evening mixer for startups, hosted by Stripe and Metronome.",
+      rsvp: null,
+    },
+    {
+      day: "Day 3 — Wed Jul 1",
+      title: "Vercel x Merge x Factory: AI Engineer After Dark",
+      time: "6:30 PM – 9:30 PM",
+      location: "San Francisco",
+      type: "party",
+      description: "The main after-dark event for Day 3. Co-hosted by Vercel, Merge, and Factory.",
+      rsvp: null,
+    },
+    {
+      day: "Day 3 — Wed Jul 1",
+      title: "Rooftop Afterparty w/ Apify x Massive x TopK",
+      time: "Evening",
+      location: "European Startup Embassy, SF",
+      type: "party",
+      description: "Rooftop hangs, music, karaoke, and World Cup knockout match on the big screen.",
+      rsvp: "https://luma.com/aie-sf-afterparty",
+    },
+    // Day 4 — Thursday Jul 2
+    {
+      day: "Day 4 — Thu Jul 2",
+      title: "Offsite Side Events & Meetups",
+      time: "6:00 PM – 10:00 PM",
+      location: "Various, San Francisco",
+      type: "side-event",
+      description: "Final night — multiple offsite events around the city. Check Luma for latest listings.",
+      rsvp: null,
+    },
+  ];
+
+  console.log(`Events: ${events.length} side events/mixers`);
+
+  // 5. Generate the HTML
   const template = readFileSync(join(__dirname, "template.html"), "utf8");
-  const html = template.replace("__ROSTER_JSON__", JSON.stringify(roster, null, 2));
+  const html = template
+    .replace("__ROSTER_JSON__", JSON.stringify(roster, null, 2))
+    .replace("__EVENTS_JSON__", JSON.stringify(events, null, 2));
 
   mkdirSync(join(__dirname, "dist"), { recursive: true });
   writeFileSync(join(__dirname, "dist/index.html"), html);

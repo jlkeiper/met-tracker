@@ -259,6 +259,141 @@
  .face.scanning .face-avatar{animation:face-pop .5s ease-out}
  @keyframes face-pop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
 
+ /* ---------- swipe view ---------- */
+ .swipe-overlay{
+ position:fixed;inset:0;z-index:100;background:var(--ink);
+ display:none;flex-direction:column;
+ }
+ .swipe-overlay.open{display:flex}
+ .swipe-header{
+ display:flex;align-items:center;justify-content:space-between;
+ padding:12px 16px;flex:none;
+ }
+ .swipe-counter{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.5)}
+ .swipe-close{
+ background:none;border:1px solid rgba(255,255,255,.2);border-radius:8px;
+ color:#fff;font-family:var(--mono);font-size:12px;padding:6px 12px;cursor:pointer;
+ }
+ .swipe-close:hover{border-color:rgba(255,255,255,.5)}
+ .swipe-body{
+ flex:1;display:flex;align-items:center;justify-content:center;
+ position:relative;overflow:hidden;touch-action:pan-y;
+ user-select:none;-webkit-user-select:none;
+ }
+ .swipe-card{
+ position:absolute;width:min(340px,85vw);
+ display:flex;flex-direction:column;align-items:center;gap:16px;
+ transition:transform .35s cubic-bezier(.4,.0,.2,1),opacity .35s;
+ will-change:transform,opacity;
+ }
+ .swipe-card.current{transform:translateX(0);opacity:1}
+ .swipe-card.left{transform:translateX(-120%);opacity:0}
+ .swipe-card.right{transform:translateX(120%);opacity:0}
+ .swipe-photo{
+ width:min(280px,70vw);height:min(280px,70vw);border-radius:50%;overflow:hidden;
+ box-shadow:0 8px 40px rgba(0,0,0,.5);
+ display:grid;place-items:center;color:#fff;font-weight:700;font-size:80px;
+ font-family:var(--sans);flex:none;
+ }
+ .swipe-photo img{width:100%;height:100%;object-fit:cover;display:block}
+ .swipe-photo.met-ring{box-shadow:0 0 0 5px var(--met),0 8px 40px rgba(0,0,0,.5)}
+ .swipe-name{
+ font-size:clamp(22px,5vw,32px);font-weight:700;color:#fff;text-align:center;
+ letter-spacing:-.01em;line-height:1.1;
+ }
+ .swipe-role{
+ font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.5);text-align:center;
+ max-width:300px;
+ }
+ .swipe-tier{
+ font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+ padding:4px 10px;border-radius:99px;font-weight:600;
+ }
+ .swipe-tier.confirmed{background:rgba(79,70,229,.25);color:#a5a0f5}
+ .swipe-tier.recognize{background:rgba(154,107,176,.2);color:#c9a8d9}
+ .swipe-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:320px}
+ .swipe-tags .tag{
+ font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);
+ background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+ border-radius:6px;padding:3px 8px;
+ }
+ .swipe-met-btn{
+ font-family:var(--mono);font-size:14px;font-weight:600;
+ padding:12px 32px;border-radius:12px;cursor:pointer;
+ border:2px solid #fff;background:transparent;color:#fff;
+ transition:.2s;letter-spacing:.02em;margin-top:8px;
+ }
+ .swipe-met-btn:hover{background:rgba(255,255,255,.1)}
+ .swipe-met-btn.is-met{background:var(--met);border-color:var(--met);color:#fff}
+ .swipe-met-btn.is-met:hover{background:#a07d22}
+ .swipe-nav{
+ display:flex;align-items:center;justify-content:center;gap:24px;
+ padding:16px;flex:none;
+ }
+ .swipe-nav button{
+ width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
+ background:none;color:#fff;font-size:20px;cursor:pointer;transition:.15s;
+ display:grid;place-items:center;
+ }
+ .swipe-nav button:hover{background:rgba(255,255,255,.1)}
+ .swipe-nav button:disabled{opacity:.2;cursor:default}
+ .swipe-dots{
+ display:flex;gap:4px;align-items:center;
+ }
+ .swipe-dots i{
+ width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);
+ transition:background .2s,transform .2s;flex:none;
+ }
+ .swipe-dots i.active{background:var(--met);transform:scale(1.4)}
+
+ /* ---------- events view ---------- */
+ .events-wrap{display:flex;flex-direction:column;gap:28px}
+ .day-group h2{
+ font-family:var(--mono);font-size:14px;letter-spacing:.06em;text-transform:uppercase;
+ color:var(--ink);margin:0 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line);
+ }
+ .event-card{
+ background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+ padding:16px 18px;box-shadow:var(--shadow);display:flex;gap:14px;
+ align-items:flex-start;transition:border-color .15s;
+ }
+ .event-card:hover{border-color:var(--signal)}
+ .event-card + .event-card{margin-top:10px}
+ .event-icon{
+ flex:none;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
+ font-size:18px;
+ }
+ .event-icon.mixer{background:#FFF0E6;color:#E67E22}
+ .event-icon.party{background:#FCEEF5;color:#E74C9F}
+ .event-icon.workshop{background:var(--signal-soft);color:var(--signal)}
+ .event-icon.meetup{background:#E8F5E9;color:#388E3C}
+ .event-icon.orientation{background:#E3F2FD;color:#1565C0}
+ .event-icon.hackathon{background:#FFF3E0;color:#EF6C00}
+ .event-icon.summit{background:#F3E5F5;color:var(--recognize)}
+ .event-icon.run{background:#E8F5E9;color:#2E7D32}
+ .event-icon.breakfast{background:#FFFDE7;color:#F9A825}
+ .event-icon.brunch{background:#FFFDE7;color:#F9A825}
+ .event-icon.dinner{background:#FBE9E7;color:#D84315}
+ .event-icon.demo{background:var(--signal-soft);color:var(--signal)}
+ .event-info{flex:1;min-width:0}
+ .event-title{font-size:16px;font-weight:650;margin:0 0 3px;line-height:1.2}
+ .event-meta{
+ font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 4px;
+ display:flex;flex-wrap:wrap;gap:4px 12px;
+ }
+ .event-desc{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.4}
+ .event-rsvp{
+ flex:none;align-self:center;font-family:var(--mono);font-size:12px;font-weight:600;
+ padding:8px 14px;border-radius:8px;border:1px solid var(--signal);
+ background:var(--signal-soft);color:var(--signal);text-decoration:none;
+ white-space:nowrap;transition:.15s;
+ }
+ .event-rsvp:hover{background:var(--signal);color:#fff}
+ @media (max-width:520px){
+ .event-card{flex-direction:column;gap:10px}
+ .event-rsvp{align-self:stretch;text-align:center}
+ }
+
  @media (prefers-reduced-motion:reduce){
  *{animation:none!important;transition:none!important}
  }
@@ -296,6 +431,8 @@
  <div class="view-toggle" id="viewToggle">
  <button class="active" data-view="cards">Cards</button>
  <button data-view="faces">Faces</button>
+ <button data-view="swipe">Swipe</button>
+ <button data-view="events">Events</button>
  </div>
  <div class="zoom-ctrl" id="zoomCtrl">
  <span>A</span>
@@ -324,6 +461,19 @@
  </div>
  </div>
 </dialog>
+
+<div class="swipe-overlay" id="swipeOverlay">
+ <div class="swipe-header">
+ <span class="swipe-counter" id="swipeCounter">1 / 30</span>
+ <button class="swipe-close" id="swipeClose">Close</button>
+ </div>
+ <div class="swipe-body" id="swipeBody"></div>
+ <div class="swipe-nav">
+ <button id="swipePrev">&larr;</button>
+ <div class="swipe-dots" id="swipeDots"></div>
+ <button id="swipeNext">&rarr;</button>
+ </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -843,12 +993,199 @@ const SEED = [
     "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_lukas_petersson.jpg"
   }
 ];
+const EVENTS = [
+  {
+    "day": "Day 0 — Sun Jun 28",
+    "title": "New Engineer Orientation (NEO)",
+    "time": "7:00 PM – 9:00 PM",
+    "location": "Moscone West",
+    "type": "orientation",
+    "description": "Meet fellow first-timers, get the lay of the land, and pick up your badge early.",
+    "rsvp": "https://luma.com/aie-neo-irl"
+  },
+  {
+    "day": "Day 0 — Sun Jun 28",
+    "title": "Early Badge Pickup",
+    "time": "5:00 PM – 9:00 PM",
+    "location": "Moscone West",
+    "type": "logistics",
+    "description": "Skip the Monday morning line. Grab your badge Sunday evening.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 1 — Mon Jun 29",
+    "title": "Sonar x Extend Welcome Reception",
+    "time": "4:00 PM – 7:30 PM",
+    "location": "Expo Floor, Moscone West",
+    "type": "reception",
+    "description": "Opening night mixer on the expo floor. Drinks, demos, and first connections.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 1 — Mon Jun 29",
+    "title": "Oxylabs VIP Reception",
+    "time": "6:00 PM – 9:00 PM",
+    "location": "TBA",
+    "type": "vip",
+    "description": "Invite-only VIP reception hosted by Oxylabs.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 1 — Mon Jun 29",
+    "title": "Firecrawl Speaker Dinner",
+    "time": "7:00 PM – 10:30 PM",
+    "location": "TBA",
+    "type": "dinner",
+    "description": "Intimate speaker dinner hosted by Firecrawl. Great for meeting speakers in a small setting.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 1 — Mon Jun 29",
+    "title": "Qodo: AIE Opening Night VIP Event",
+    "time": "7:00 PM – 9:30 PM",
+    "location": "Grand Hall",
+    "type": "vip",
+    "description": "Exclusive evening reception with AI engineering leaders. Limited to 100 approved guests.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 1 — Mon Jun 29",
+    "title": "AI Engineer Pre-Party w/ Heavybit & Continue",
+    "time": "Evening",
+    "location": "San Francisco",
+    "type": "party",
+    "description": "Pre-conference happy hour with bites, drinks, and conversation with builders and founders.",
+    "rsvp": "https://luma.com/ai-engineer-summit-pre-party"
+  },
+  {
+    "day": "Day 2 — Tue Jun 30",
+    "title": "Onsite Networking Night",
+    "time": "5:00 PM – 7:30 PM",
+    "location": "Moscone West",
+    "type": "mixer",
+    "description": "Official on-site networking event. The biggest hallway-track moment of the conference.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 2 — Tue Jun 30",
+    "title": "Optiver: The Agentic SDLC Loop",
+    "time": "7:30 PM – 10:30 PM",
+    "location": "TBA",
+    "type": "side-event",
+    "description": "Matt Nassr hosts a deep dive on context, evaluation, execution, and governance for agentic SDLC. Highly relevant to APEX work.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 2 — Tue Jun 30",
+    "title": "Cerebral Valley & Shack15 Private Evening",
+    "time": "6:00 PM – 10:00 PM",
+    "location": "Shack15, San Francisco",
+    "type": "party",
+    "description": "Private evening for founders, engineers, and researchers. Ideas, demos, and late-night conversations.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 2 — Tue Jun 30",
+    "title": "AI + Infrastructure Leaders Dinner",
+    "time": "Evening",
+    "location": "San Francisco",
+    "type": "dinner",
+    "description": "VPs, directors, and technical founders discuss production AI challenges and reliability.",
+    "rsvp": "https://luma.com/unm1hdg2"
+  },
+  {
+    "day": "Day 2 — Tue Jun 30",
+    "title": "Anthropic + AWS Startups Happy Hour",
+    "time": "Evening",
+    "location": "San Francisco",
+    "type": "mixer",
+    "description": "Happy hour co-hosted by Anthropic and AWS for startup founders and engineers.",
+    "rsvp": "https://luma.com/anthropicAIworldfair"
+  },
+  {
+    "day": "Day 3 — Wed Jul 1",
+    "title": "World Cup Quarterfinal VIP Suite",
+    "time": "4:00 PM – 7:00 PM",
+    "location": "Moscone West (or Levi's Stadium — invite only)",
+    "type": "watch-party",
+    "description": "Watch the World Cup quarterfinal with fellow attendees. VIP suite is invite-only / sponsorship.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 3 — Wed Jul 1",
+    "title": "Stripe x Metronome Startup Night",
+    "time": "6:00 PM – 9:00 PM",
+    "location": "San Francisco",
+    "type": "mixer",
+    "description": "Evening mixer for startups, hosted by Stripe and Metronome.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 3 — Wed Jul 1",
+    "title": "Vercel x Merge x Factory: AI Engineer After Dark",
+    "time": "6:30 PM – 9:30 PM",
+    "location": "San Francisco",
+    "type": "party",
+    "description": "The main after-dark event for Day 3. Co-hosted by Vercel, Merge, and Factory.",
+    "rsvp": null
+  },
+  {
+    "day": "Day 3 — Wed Jul 1",
+    "title": "Rooftop Afterparty w/ Apify x Massive x TopK",
+    "time": "Evening",
+    "location": "European Startup Embassy, SF",
+    "type": "party",
+    "description": "Rooftop hangs, music, karaoke, and World Cup knockout match on the big screen.",
+    "rsvp": "https://luma.com/aie-sf-afterparty"
+  },
+  {
+    "day": "Day 4 — Thu Jul 2",
+    "title": "Offsite Side Events & Meetups",
+    "time": "6:00 PM – 10:00 PM",
+    "location": "Various, San Francisco",
+    "type": "side-event",
+    "description": "Final night — multiple offsite events around the city. Check Luma for latest listings.",
+    "rsvp": null
+  }
+];
 
 const STORAGE_KEY = "aiewf2026_tracker_v1";
+const EVENT_SLUG = "aiewf2026";
+const VALID_VIEWS = new Set(["cards","faces","swipe","events"]);
 let state = { met:{}, custom:[] };
 let activeFilter = "all";
 let query = "";
 let viewMode = "cards";
+
+/* ---------- router (functions only — wired up in boot) ---------- */
+function parseRoute(){
+ const parts = location.pathname.replace(/^\/|\/$/g,"").split("/");
+ const view = VALID_VIEWS.has(parts[1]) ? parts[1] : "cards";
+ return { event: parts[0] || EVENT_SLUG, view };
+}
+function navigate(view, replace){
+ const path = `/${EVENT_SLUG}${view==="cards"?"":"/"+view}`;
+ if(replace) history.replaceState({view}, "", path);
+ else history.pushState({view}, "", path);
+ applyView(view);
+}
+function applyView(view){
+ viewMode = view;
+ [...document.querySelectorAll("#viewToggle button")].forEach(c=>c.classList.toggle("active",c.dataset.view===view));
+ document.getElementById("zoomCtrl").classList.toggle("visible", view==="faces");
+ if(view==="swipe"){
+ openSwipe(true);
+ }else if(view==="events"){
+ document.getElementById("swipeOverlay").classList.remove("open");
+ document.body.style.overflow="";
+ renderEvents();
+ }else{
+ document.getElementById("swipeOverlay").classList.remove("open");
+ document.body.style.overflow="";
+ render();
+ if(view==="faces") applyZoom();
+ }
+}
 
 const grid = document.getElementById("grid");
 const toastEl = document.getElementById("toast");
@@ -889,6 +1226,21 @@ function fmtTime(ts){
  return d.toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
 }
 function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+function tagColor(tag){
+ const h=hue(tag);
+ return `hsl(${h} 50% 42%)`;
+}
+function tagBg(tag){
+ const h=hue(tag);
+ return `hsl(${h} 45% 94%)`;
+}
+function tagStyle(tag){
+ return `color:${tagColor(tag)};background:${tagBg(tag)};border-color:hsl(${hue(tag)} 40% 86%)`;
+}
+function tagStyleDark(tag){
+ const h=hue(tag);
+ return `color:hsl(${h} 60% 72%);background:hsla(${h},40%,50%,.15);border-color:hsla(${h},40%,50%,.25)`;
+}
 
 /* ---------- render ---------- */
 function passesFilter(p){
@@ -946,7 +1298,7 @@ function renderCards(list){
 
  const tierLabel = p.tier==="confirmed" ? "Confirmed" : "Recognize";
  const sessionHTML = p.session ? `<div class="session"><b>Session</b> \u00b7 ${esc(p.session)}</div>` : "";
- const tagsHTML = (p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+ const tagsHTML = (p.tags||[]).map(t=>`<span class="tag" style="${tagStyle(t)}">${esc(t)}</span>`).join("");
  const linksHTML = Object.entries(p.links||{}).filter(([_,v])=>v)
  .map(([k,v])=>`<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${linkLabel(k)} \u2197</a>`).join("");
 
@@ -1071,13 +1423,167 @@ function applyZoom(){
 
 document.getElementById("viewToggle").addEventListener("click",e=>{
  const b=e.target.closest("[data-view]"); if(!b) return;
- viewMode=b.dataset.view;
- [...document.querySelectorAll("#viewToggle button")].forEach(c=>c.classList.toggle("active",c===b));
- zoomCtrl.classList.toggle("visible", viewMode==="faces");
- render();
- if(viewMode==="faces") applyZoom();
+ navigate(b.dataset.view);
 });
 zoomRange.addEventListener("input",()=>{ applyZoom(); });
+
+/* ---------- swipe view ---------- */
+const swipeOverlay = document.getElementById("swipeOverlay");
+const swipeBody = document.getElementById("swipeBody");
+const swipeCounter = document.getElementById("swipeCounter");
+const swipeDots = document.getElementById("swipeDots");
+let swipeIdx = 0;
+let swipeList = [];
+
+function openSwipe(fromRouter){
+ swipeList = people().filter(passesFilter);
+ if(swipeList.length===0){ toast("No people to show"); return; }
+ swipeIdx = 0;
+ swipeOverlay.classList.add("open");
+ document.body.style.overflow="hidden";
+ buildDots();
+ renderSwipeCard();
+}
+
+function closeSwipe(){
+ navigate("cards");
+}
+
+function buildDots(){
+ swipeDots.innerHTML="";
+ const max = Math.min(swipeList.length, 40);
+ for(let i=0;i<max;i++){
+ const d=document.createElement("i");
+ if(i===swipeIdx) d.classList.add("active");
+ swipeDots.appendChild(d);
+ }
+}
+
+function renderSwipeCard(){
+ const p = swipeList[swipeIdx];
+ if(!p) return;
+ const m = state.met[p.id]||{};
+ const shortName = p.name.replace(/\(.*?\)/g,"").trim();
+ const tierLabel = p.tier==="confirmed" ? "Confirmed" : "Recognize";
+
+ swipeBody.innerHTML="";
+ const card = document.createElement("div");
+ card.className="swipe-card current";
+
+ let photoInner;
+ if(p.photoUrl){
+ photoInner=`<img src="${esc(p.photoUrl)}" alt="" onerror="this.remove();this.parentNode.textContent='${initials(p.name)}'">`;
+ }else{
+ photoInner=initials(p.name);
+ }
+
+ card.innerHTML=`
+ <div class="swipe-photo ${m.met?"met-ring":""}" style="${avatarBg(p.name)}">${photoInner}</div>
+ <div class="swipe-name">${esc(shortName)}</div>
+ <div class="swipe-role">${esc(p.role)}</div>
+ <span class="swipe-tier ${p.tier}">${tierLabel}</span>
+ ${(p.tags||[]).length?`<div class="swipe-tags">${(p.tags||[]).map(t=>`<span class="tag" style="${tagStyleDark(t)}">${esc(t)}</span>`).join("")}</div>`:""}
+ <button class="swipe-met-btn ${m.met?"is-met":""}">${m.met?"\u2713 Met":"Mark as met"}</button>
+ `;
+
+ card.querySelector(".swipe-met-btn").addEventListener("click",()=>{
+ toggleMet(p.id,null);
+ renderSwipeCard();
+ });
+
+ swipeBody.appendChild(card);
+ swipeCounter.textContent=`${swipeIdx+1} / ${swipeList.length}`;
+
+ const dots=[...swipeDots.children];
+ dots.forEach((d,i)=>d.classList.toggle("active",i===swipeIdx));
+
+ document.getElementById("swipePrev").disabled=swipeIdx===0;
+ document.getElementById("swipeNext").disabled=swipeIdx===swipeList.length-1;
+}
+
+function swipeNav(dir){
+ const next=swipeIdx+dir;
+ if(next<0||next>=swipeList.length) return;
+ const old=swipeBody.querySelector(".swipe-card");
+ if(old){ old.classList.remove("current"); old.classList.add(dir>0?"left":"right"); }
+ swipeIdx=next;
+ setTimeout(()=>{
+ renderSwipeCard();
+ const card=swipeBody.querySelector(".swipe-card");
+ if(card){
+ card.classList.remove("current"); card.classList.add(dir>0?"right":"left");
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{ card.classList.remove("left","right"); card.classList.add("current"); }));
+ }
+ },50);
+}
+
+document.getElementById("swipeNext").addEventListener("click",()=>swipeNav(1));
+document.getElementById("swipePrev").addEventListener("click",()=>swipeNav(-1));
+document.getElementById("swipeClose").addEventListener("click",closeSwipe);
+
+// Touch swipe
+let touchX=null;
+swipeBody.addEventListener("touchstart",e=>{ touchX=e.touches[0].clientX; },{passive:true});
+swipeBody.addEventListener("touchend",e=>{
+ if(touchX===null) return;
+ const dx=e.changedTouches[0].clientX-touchX;
+ touchX=null;
+ if(Math.abs(dx)>50){ swipeNav(dx<0?1:-1); }
+});
+
+// Keyboard nav
+swipeOverlay.addEventListener("keydown",e=>{
+ if(e.key==="ArrowRight") swipeNav(1);
+ else if(e.key==="ArrowLeft") swipeNav(-1);
+ else if(e.key==="Escape") closeSwipe();
+});
+
+/* ---------- events view ---------- */
+const EVENT_ICONS = {
+ orientation:"\ud83c\udf1f", mixer:"\ud83c\udf78", party:"\ud83c\udf89", workshop:"\ud83d\udee0\ufe0f",
+ meetup:"\ud83e\udd1d", hackathon:"\ud83d\udcbb", summit:"\ud83c\udf10", run:"\ud83c\udfc3",
+ breakfast:"\u2615", brunch:"\ud83e\udd5e", dinner:"\ud83c\udf7d\ufe0f", demo:"\ud83d\ude80"
+};
+function renderEvents(){
+ grid.innerHTML="";
+ grid.classList.remove("faces");
+ // Group by day
+ const groups = {};
+ EVENTS.forEach(ev=>{
+  if(!groups[ev.day]) groups[ev.day]=[];
+  groups[ev.day].push(ev);
+ });
+ const wrap=document.createElement("div");
+ wrap.className="events-wrap";
+ wrap.style.gridColumn="1/-1";
+
+ Object.entries(groups).forEach(([day,evts])=>{
+  const g=document.createElement("div");
+  g.className="day-group";
+  g.innerHTML=`<h2>${esc(day)}</h2>`;
+  evts.forEach(ev=>{
+   const icon = EVENT_ICONS[ev.type]||"\ud83d\udcc5";
+   const card=document.createElement("div");
+   card.className="event-card";
+   card.innerHTML=`
+    <div class="event-icon ${esc(ev.type)}">${icon}</div>
+    <div class="event-info">
+     <p class="event-title">${esc(ev.title)}</p>
+     <p class="event-meta"><span>\ud83d\udd52 ${esc(ev.time)}</span><span>\ud83d\udccd ${esc(ev.location)}</span></p>
+     ${ev.description?`<p class="event-desc">${esc(ev.description)}</p>`:""}
+    </div>
+    ${ev.rsvp?`<a class="event-rsvp" href="${esc(ev.rsvp)}" target="_blank" rel="noopener noreferrer">RSVP \u2197</a>`:""}
+   `;
+   g.appendChild(card);
+  });
+  wrap.appendChild(g);
+ });
+ grid.appendChild(wrap);
+
+ // Update progress bar area to show event count
+ document.getElementById("count").textContent = `${EVENTS.length} events`;
+ document.getElementById("barFill").style.width = "100%";
+}
 
 /* ---------- add person ---------- */
 const dlg=document.getElementById("addDlg");
@@ -1124,7 +1630,18 @@ function toast(msg){
 }
 
 /* ---------- boot ---------- */
-load(); render();
+load();
+window.addEventListener("popstate",e=>{
+ const view = e.state?.view || parseRoute().view;
+ applyView(view);
+});
+// Initialize from URL
+const initView = parseRoute().view;
+if(!location.pathname.startsWith(`/${EVENT_SLUG}`)){
+ navigate("cards", true);
+}else{
+ navigate(initView, true);
+}
 </script>
 </body>
 </html>
