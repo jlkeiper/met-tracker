@@ -389,9 +389,83 @@
  white-space:nowrap;transition:.15s;
  }
  .event-rsvp:hover{background:var(--signal);color:#fff}
+ .event-actions{
+ display:flex;gap:6px;margin-top:6px;
+ }
+ .event-status-btn{
+ font-family:var(--mono);font-size:11px;font-weight:600;
+ padding:5px 10px;border-radius:6px;cursor:pointer;
+ border:1px solid var(--line-strong);background:var(--card);color:var(--ink-soft);
+ transition:.15s;letter-spacing:.02em;
+ }
+ .event-status-btn:hover{border-color:var(--signal);color:var(--signal)}
+ .event-status-btn.active-interested{
+ background:#FFF8E1;border-color:#F9A825;color:#F57F17;
+ }
+ .event-status-btn.active-going{
+ background:#E8F5E9;border-color:#4CAF50;color:#2E7D32;
+ }
+ .event-card.ev-going{border-color:#4CAF50;border-width:2px}
+ .event-card.ev-interested{border-left:3px solid #F9A825}
+ .event-status-label{
+ font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+ padding:3px 7px;border-radius:5px;font-weight:600;flex:none;align-self:flex-start;margin-top:2px;
+ }
+ .event-status-label.going{background:#E8F5E9;color:#2E7D32}
+ .event-status-label.interested{background:#FFF8E1;color:#F57F17}
+ .event-filter-chips{
+ display:flex;gap:6px;margin-bottom:16px;
+ }
  @media (max-width:520px){
  .event-card{flex-direction:column;gap:10px}
  .event-rsvp{align-self:stretch;text-align:center}
+ }
+
+ /* ---------- view-aware controls ---------- */
+ .people-controls{display:contents}
+ .wrap.events-mode .people-controls{display:none}
+ .wrap.events-mode #copyBtn{display:none}
+ .event-search{
+ display:none;flex:1 1 220px;min-width:180px;align-items:center;gap:8px;
+ background:var(--card);border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;
+ }
+ .event-search input{border:0;outline:0;background:transparent;font-size:14px;width:100%;color:var(--ink);font-family:var(--sans)}
+ .event-search span{font-family:var(--mono);color:var(--muted);font-size:13px}
+ .wrap.events-mode .event-search{display:flex}
+
+ /* ---------- sort control ---------- */
+ .sort-ctrl{
+ font-family:var(--mono);font-size:12px;
+ padding:7px 11px;border-radius:99px;border:1px solid var(--line-strong);
+ background:var(--card);color:var(--ink-soft);cursor:pointer;transition:.15s;
+ appearance:none;-webkit-appearance:none;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A8780'/%3E%3C/svg%3E");
+ background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;
+ }
+ .sort-ctrl:hover{border-color:var(--signal);color:var(--signal)}
+ .wrap.events-mode .sort-ctrl{display:none}
+
+ /* ---------- face info button ---------- */
+ .face-info{
+ position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;
+ background:var(--signal-soft);color:var(--signal);font-size:11px;font-weight:700;
+ display:none;place-items:center;cursor:pointer;z-index:3;border:0;
+ font-family:var(--mono);line-height:1;
+ }
+ .face:hover .face-info{display:grid}
+
+ /* ---------- swipe progress bar ---------- */
+ .swipe-progress{
+ flex:1;max-width:200px;height:3px;background:rgba(255,255,255,.15);
+ border-radius:99px;overflow:hidden;
+ }
+ .swipe-progress i{display:block;height:100%;background:var(--met);border-radius:99px;transition:width .3s}
+
+ /* ---------- swipe why ---------- */
+ .swipe-why{
+ font-size:13px;color:rgba(255,255,255,.45);text-align:center;
+ max-width:300px;font-style:italic;margin-top:-8px;
+ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
  }
 
  @media (prefers-reduced-motion:reduce){
@@ -399,7 +473,7 @@
  }
  @media (max-width:520px){
  .grid:not(.faces){grid-template-columns:1fr}
- .grid.faces{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+ .grid.faces{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
  .ghost{margin-left:0}
  }
 </style>
@@ -407,8 +481,8 @@
 <body>
 <div class="wrap">
  <p class="eyebrow">// AI ENGINEER WORLD'S FAIR 2026 · <b>MET TRACKER</b> · MOSCONE WEST</p>
- <h1>Who you've scanned in</h1>
- <p class="sub">A badge-collector for the people worth meeting. Tap <b>Mark as met</b> to scan someone in — it sticks when you leave and come back. Add anyone you run into who isn't on the list.</p>
+ <h1 id="pageTitle">Who you've scanned in</h1>
+ <p class="sub" id="pageSub">A badge-collector for the people worth meeting. Tap <b>Mark as met</b> to scan someone in — it sticks when you leave and come back. Add anyone you run into who isn't on the list.</p>
 
  <div class="progress">
  <span class="count" id="count">0 / 0</span>
@@ -416,7 +490,8 @@
  </div>
  <div class="bar"><i id="barFill"></i></div>
 
- <div class="controls">
+ <div class="controls" id="controls">
+ <div class="people-controls">
  <label class="search">
  <span>&#x2315;</span>
  <input id="search" type="text" placeholder="Search name, company, topic..." autocomplete="off" />
@@ -428,6 +503,17 @@
  <button class="chip" data-filter="confirmed" aria-pressed="false">Confirmed speakers</button>
  <button class="chip" data-filter="recognize" aria-pressed="false">Recognize on sight</button>
  </div>
+ <select class="sort-ctrl" id="sortCtrl">
+ <option value="alpha">A &rarr; Z</option>
+ <option value="session">Next session</option>
+ <option value="unmet-first">Unmet first</option>
+ <option value="met-first">Met first</option>
+ </select>
+ </div>
+ <label class="event-search">
+ <span>&#x2315;</span>
+ <input id="eventSearch" type="text" placeholder="Search events..." autocomplete="off" />
+ </label>
  <div class="view-toggle" id="viewToggle">
  <button class="active" data-view="cards">Cards</button>
  <button data-view="faces">Faces</button>
@@ -462,6 +548,33 @@
  </div>
 </dialog>
 
+<dialog id="addEventDlg">
+ <div class="dlg">
+ <h2>Add a side event</h2>
+ <p>Track an impromptu meetup, dinner, or party.</p>
+ <label for="fe-title">Event name</label>
+ <input id="fe-title" type="text" placeholder="Rooftop drinks @ The Standard" />
+ <label for="fe-day">Day</label>
+ <select id="fe-day" style="width:100%;border:1px solid var(--line-strong);border-radius:9px;padding:9px 11px;font-size:14px;font-family:var(--sans);color:var(--ink)">
+ <option>Day 0 — Sun Jun 28</option>
+ <option>Day 1 — Mon Jun 29</option>
+ <option>Day 2 — Tue Jun 30</option>
+ <option>Day 3 — Wed Jul 1</option>
+ <option>Day 4 — Thu Jul 2</option>
+ </select>
+ <label for="fe-time">Time</label>
+ <input id="fe-time" type="text" placeholder="7:00 PM – 10:00 PM" />
+ <label for="fe-location">Location</label>
+ <input id="fe-location" type="text" placeholder="The Standard, SF" />
+ <label for="fe-rsvp">RSVP link (optional)</label>
+ <input id="fe-rsvp" type="text" placeholder="https://lu.ma/..." />
+ <div class="dlg-actions">
+ <button class="cancel" id="addEventCancel">Cancel</button>
+ <button class="save" id="addEventSave">Add event</button>
+ </div>
+ </div>
+</dialog>
+
 <div class="swipe-overlay" id="swipeOverlay">
  <div class="swipe-header">
  <span class="swipe-counter" id="swipeCounter">1 / 30</span>
@@ -470,7 +583,7 @@
  <div class="swipe-body" id="swipeBody"></div>
  <div class="swipe-nav">
  <button id="swipePrev">&larr;</button>
- <div class="swipe-dots" id="swipeDots"></div>
+ <div class="swipe-progress" id="swipeProgress"><i id="swipeProgressFill"></i></div>
  <button id="swipeNext">&rarr;</button>
  </div>
 </div>
@@ -1152,7 +1265,7 @@ const EVENTS = [
 const STORAGE_KEY = "aiewf2026_tracker_v1";
 const EVENT_SLUG = "aiewf2026";
 const VALID_VIEWS = new Set(["cards","faces","swipe","events"]);
-let state = { met:{}, custom:[] };
+let state = { met:{}, custom:[], events:{}, customEvents:[] };
 let activeFilter = "all";
 let query = "";
 let viewMode = "cards";
@@ -1171,11 +1284,31 @@ function navigate(view, replace){
 }
 function applyView(view){
  viewMode = view;
+ const wrap = document.querySelector(".wrap");
+ const isEvents = view==="events";
+ wrap.classList.toggle("events-mode", isEvents);
  [...document.querySelectorAll("#viewToggle button")].forEach(c=>c.classList.toggle("active",c.dataset.view===view));
  document.getElementById("zoomCtrl").classList.toggle("visible", view==="faces");
+
+ // Adapt header per view
+ const title = document.getElementById("pageTitle");
+ const sub = document.getElementById("pageSub");
+ const copyBtn = document.getElementById("copyBtn");
+ if(isEvents){
+ title.textContent = "Your conference schedule";
+ sub.innerHTML = "Side events, mixers, and parties happening around AI Engineer World\u2019s Fair. Mark what you\u2019re going to.";
+ copyBtn.textContent = "Export schedule";
+ }else{
+ title.textContent = "Who you\u2019ve scanned in";
+ sub.innerHTML = "A badge-collector for the people worth meeting. Tap <b>Mark as met</b> to scan someone in \u2014 it sticks when you leave and come back.";
+ copyBtn.textContent = "Copy my list";
+ }
+ // Update countLabel
+ document.getElementById("countLabel").textContent = isEvents ? "" : "scanned in";
+
  if(view==="swipe"){
  openSwipe(true);
- }else if(view==="events"){
+ }else if(isEvents){
  document.getElementById("swipeOverlay").classList.remove("open");
  document.body.style.overflow="";
  renderEvents();
@@ -1198,6 +1331,8 @@ function load(){
  }catch(e){ /* first run */ }
  if(!state.met) state.met = {};
  if(!state.custom) state.custom = [];
+ if(!state.events) state.events = {};
+ if(!state.customEvents) state.customEvents = [];
 }
 let saveTimer=null;
 function save(){
@@ -1267,9 +1402,10 @@ function render(){
  const all = people();
  const metCount = all.filter(p=>state.met[p.id]?.met).length;
  document.getElementById("count").textContent = `${metCount} / ${all.length}`;
+ document.getElementById("countLabel").textContent = "scanned in";
  document.getElementById("barFill").style.width = all.length? (metCount/all.length*100)+"%" : "0%";
 
- const list = all.filter(passesFilter);
+ const list = sortPeople(all.filter(passesFilter));
  grid.innerHTML="";
 
  if(viewMode==="faces"){
@@ -1284,7 +1420,10 @@ function render(){
  if(list.length===0){
  const e=document.createElement("div");
  e.className="empty";
- e.textContent = query ? `No one matches "${query}".` : "Nothing here yet.";
+ if(query) e.innerHTML = `\ud83d\udd0d No one matches \u201c${esc(query)}\u201d`;
+ else if(activeFilter==="met") e.innerHTML = "\ud83e\udd1d You haven\u2019t scanned anyone in yet. Get out there!";
+ else if(activeFilter==="unmet") e.innerHTML = "\ud83c\udf89 You\u2019ve met everyone on your list!";
+ else e.innerHTML = "\ud83d\udccb No one here yet. Add someone!";
  grid.insertBefore(e, grid.firstChild);
  }
 }
@@ -1359,10 +1498,21 @@ function renderFaces(list){
  const tierLabel = p.tier==="confirmed" ? "Confirmed" : "Recognize";
 
  face.innerHTML = `
+ <button class="face-info" title="View details">i</button>
  ${faceAvatarHTML(p)}
  <span class="face-name">${esc(shortName)}</span>
  <span class="face-badge ${p.tier}">${tierLabel}</span>
  `;
+
+ // Info button → navigate to cards and scroll to person
+ face.querySelector(".face-info").addEventListener("click",e=>{
+ e.stopPropagation();
+ navigate("cards");
+ requestAnimationFrame(()=>{
+  const target = document.querySelector(`.card[data-id="${p.id}"]`);
+  if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); target.style.outline="3px solid var(--signal)"; setTimeout(()=>target.style.outline="",2000); }
+ });
+ });
 
  face.addEventListener("click",()=>{
  toggleMet(p.id, face);
@@ -1395,14 +1545,50 @@ function toggleMet(id,card){
  save(); render();
 }
 
+/* ---------- sorting ---------- */
+let sortMode = "alpha";
+function sortPeople(list){
+ const sorted = [...list];
+ switch(sortMode){
+ case "session":
+  sorted.sort((a,b)=>{
+   const ta = (a.session||"").match(/Day\s*(\d)/);
+   const tb = (b.session||"").match(/Day\s*(\d)/);
+   const da = ta?+ta[1]:99, db = tb?+tb[1]:99;
+   if(da!==db) return da-db;
+   return a.name.localeCompare(b.name);
+  }); break;
+ case "unmet-first":
+  sorted.sort((a,b)=>{
+   const ma=state.met[a.id]?.met?1:0, mb=state.met[b.id]?.met?1:0;
+   if(ma!==mb) return ma-mb;
+   return a.name.localeCompare(b.name);
+  }); break;
+ case "met-first":
+  sorted.sort((a,b)=>{
+   const ma=state.met[a.id]?.met?1:0, mb=state.met[b.id]?.met?1:0;
+   if(ma!==mb) return mb-ma;
+   return a.name.localeCompare(b.name);
+  }); break;
+ default: sorted.sort((a,b)=>a.name.localeCompare(b.name));
+ }
+ return sorted;
+}
+
 /* ---------- filters / search ---------- */
 document.getElementById("chips").addEventListener("click",e=>{
- const b=e.target.closest(".chip"); if(!b) return;
+ const b=e.target.closest(".chip"); if(!b||!b.dataset.filter) return;
  activeFilter=b.dataset.filter;
- [...document.querySelectorAll(".chip")].forEach(c=>c.setAttribute("aria-pressed", c===b));
- render();
+ [...document.querySelectorAll("#chips .chip")].forEach(c=>c.setAttribute("aria-pressed", c===b));
+ if(viewMode==="events") renderEvents();
+ else render();
 });
 document.getElementById("search").addEventListener("input",e=>{ query=e.target.value.trim().toLowerCase(); render(); });
+document.getElementById("sortCtrl").addEventListener("change",e=>{ sortMode=e.target.value; render(); });
+
+/* ---------- event search ---------- */
+let eventQuery = "";
+document.getElementById("eventSearch").addEventListener("input",e=>{ eventQuery=e.target.value.trim().toLowerCase(); renderEvents(); });
 
 /* ---------- view toggle + zoom ---------- */
 const ZOOM_STEPS = [
@@ -1431,17 +1617,16 @@ zoomRange.addEventListener("input",()=>{ applyZoom(); });
 const swipeOverlay = document.getElementById("swipeOverlay");
 const swipeBody = document.getElementById("swipeBody");
 const swipeCounter = document.getElementById("swipeCounter");
-const swipeDots = document.getElementById("swipeDots");
+const swipeProgressFill = document.getElementById("swipeProgressFill");
 let swipeIdx = 0;
 let swipeList = [];
 
 function openSwipe(fromRouter){
- swipeList = people().filter(passesFilter);
+ swipeList = sortPeople(people().filter(passesFilter));
  if(swipeList.length===0){ toast("No people to show"); return; }
  swipeIdx = 0;
  swipeOverlay.classList.add("open");
  document.body.style.overflow="hidden";
- buildDots();
  renderSwipeCard();
 }
 
@@ -1449,14 +1634,9 @@ function closeSwipe(){
  navigate("cards");
 }
 
-function buildDots(){
- swipeDots.innerHTML="";
- const max = Math.min(swipeList.length, 40);
- for(let i=0;i<max;i++){
- const d=document.createElement("i");
- if(i===swipeIdx) d.classList.add("active");
- swipeDots.appendChild(d);
- }
+function updateSwipeProgress(){
+ const pct = swipeList.length ? ((swipeIdx+1)/swipeList.length*100) : 0;
+ swipeProgressFill.style.width = pct+"%";
 }
 
 function renderSwipeCard(){
@@ -1482,20 +1662,24 @@ function renderSwipeCard(){
  <div class="swipe-name">${esc(shortName)}</div>
  <div class="swipe-role">${esc(p.role)}</div>
  <span class="swipe-tier ${p.tier}">${tierLabel}</span>
+ ${p.why?`<div class="swipe-why">\u201c${esc(p.why)}\u201d</div>`:""}
  ${(p.tags||[]).length?`<div class="swipe-tags">${(p.tags||[]).map(t=>`<span class="tag" style="${tagStyleDark(t)}">${esc(t)}</span>`).join("")}</div>`:""}
  <button class="swipe-met-btn ${m.met?"is-met":""}">${m.met?"\u2713 Met":"Mark as met"}</button>
  `;
 
  card.querySelector(".swipe-met-btn").addEventListener("click",()=>{
+ const wasMet = !!state.met[p.id]?.met;
  toggleMet(p.id,null);
  renderSwipeCard();
+ // Auto-advance to next person after marking met
+ if(!wasMet && swipeIdx < swipeList.length-1){
+  setTimeout(()=>swipeNav(1), 700);
+ }
  });
 
  swipeBody.appendChild(card);
  swipeCounter.textContent=`${swipeIdx+1} / ${swipeList.length}`;
-
- const dots=[...swipeDots.children];
- dots.forEach((d,i)=>d.classList.toggle("active",i===swipeIdx));
+ updateSwipeProgress();
 
  document.getElementById("swipePrev").disabled=swipeIdx===0;
  document.getElementById("swipeNext").disabled=swipeIdx===swipeList.length-1;
@@ -1544,12 +1728,67 @@ const EVENT_ICONS = {
  meetup:"\ud83e\udd1d", hackathon:"\ud83d\udcbb", summit:"\ud83c\udf10", run:"\ud83c\udfc3",
  breakfast:"\u2615", brunch:"\ud83e\udd5e", dinner:"\ud83c\udf7d\ufe0f", demo:"\ud83d\ude80"
 };
+let eventFilter = "all-events";
+function eventId(ev){ return "ev_"+ev.title.replace(/\W+/g,"_").toLowerCase().slice(0,40); }
+function toggleEventStatus(ev, status){
+ const id = eventId(ev);
+ const cur = state.events[id];
+ if(cur === status){
+ delete state.events[id];
+ toast("Removed from " + status);
+ }else{
+ state.events[id] = status;
+ toast(status === "going" ? "Marked as going \u2713" : "Marked as interested \u2606");
+ }
+ save(); renderEvents();
+}
 function renderEvents(){
  grid.innerHTML="";
  grid.classList.remove("faces");
+
+ const goingCount = Object.values(state.events).filter(s=>s==="going").length;
+ const intCount = Object.values(state.events).filter(s=>s==="interested").length;
+ document.getElementById("count").textContent = `${goingCount} going \u00b7 ${intCount} interested`;
+ document.getElementById("barFill").style.width = EVENTS.length? ((goingCount+intCount)/EVENTS.length*100)+"%" : "0%";
+
+ // Filter chips
+ const chipWrap=document.createElement("div");
+ chipWrap.className="event-filter-chips";
+ chipWrap.style.gridColumn="1/-1";
+ const filters=[
+  {key:"all-events",label:"All events"},
+  {key:"going",label:`Going (${goingCount})`},
+  {key:"interested",label:`Interested (${intCount})`},
+ ];
+ filters.forEach(f=>{
+  const btn=document.createElement("button");
+  btn.className="chip";
+  btn.textContent=f.label;
+  btn.setAttribute("aria-pressed", eventFilter===f.key);
+  btn.addEventListener("click",()=>{ eventFilter=f.key; renderEvents(); });
+  chipWrap.appendChild(btn);
+ });
+ grid.appendChild(chipWrap);
+
+ // Also include custom events
+ const allEvents = [...EVENTS, ...(state.customEvents||[])];
+
+ // Filter events
+ let filtered = allEvents;
+ if(eventFilter==="going") filtered = allEvents.filter(ev=>state.events[eventId(ev)]==="going");
+ if(eventFilter==="interested") filtered = allEvents.filter(ev=>state.events[eventId(ev)]==="interested");
+
+ // Event search
+ if(eventQuery){
+  filtered = filtered.filter(ev=>{
+   const hay = (ev.title+" "+ev.location+" "+(ev.description||"")+" "+ev.day).toLowerCase();
+   return hay.includes(eventQuery);
+  });
+ }
+
  // Group by day
  const groups = {};
- EVENTS.forEach(ev=>{
+ filtered.forEach(ev=>{
   if(!groups[ev.day]) groups[ev.day]=[];
   groups[ev.day].push(ev);
  });
@@ -1557,33 +1796,81 @@ function renderEvents(){
  wrap.className="events-wrap";
  wrap.style.gridColumn="1/-1";
 
+ if(filtered.length===0){
+  wrap.innerHTML=`<div class="empty">${eventQuery ? "\ud83d\udd0d No events match \u201c"+esc(eventQuery)+"\u201d" : eventFilter==="going" ? "\ud83d\udccd You haven\u2019t marked any events as going yet" : "\u2606 No interested events yet"}</div>`;
+  grid.appendChild(wrap);
+  return;
+ }
+
  Object.entries(groups).forEach(([day,evts])=>{
   const g=document.createElement("div");
   g.className="day-group";
   g.innerHTML=`<h2>${esc(day)}</h2>`;
   evts.forEach(ev=>{
+   const id = eventId(ev);
+   const status = state.events[id] || null;
    const icon = EVENT_ICONS[ev.type]||"\ud83d\udcc5";
    const card=document.createElement("div");
-   card.className="event-card";
+   card.className="event-card"+(status==="going"?" ev-going":"")+(status==="interested"?" ev-interested":"");
+
+   const statusLabel = status==="going"
+    ? `<span class="event-status-label going">\u2713 Going</span>`
+    : status==="interested"
+    ? `<span class="event-status-label interested">\u2606 Interested</span>`
+    : "";
+
    card.innerHTML=`
     <div class="event-icon ${esc(ev.type)}">${icon}</div>
     <div class="event-info">
-     <p class="event-title">${esc(ev.title)}</p>
+     <p class="event-title">${esc(ev.title)}${statusLabel?` ${statusLabel}`:""}</p>
      <p class="event-meta"><span>\ud83d\udd52 ${esc(ev.time)}</span><span>\ud83d\udccd ${esc(ev.location)}</span></p>
      ${ev.description?`<p class="event-desc">${esc(ev.description)}</p>`:""}
+     <div class="event-actions">
+      <button class="event-status-btn${status==="going"?" active-going":""}" data-action="going">${status==="going"?"\u2713 Going":"Going"}</button>
+      <button class="event-status-btn${status==="interested"?" active-interested":""}" data-action="interested">${status==="interested"?"\u2606 Interested":"Interested"}</button>
+     </div>
     </div>
     ${ev.rsvp?`<a class="event-rsvp" href="${esc(ev.rsvp)}" target="_blank" rel="noopener noreferrer">RSVP \u2197</a>`:""}
    `;
+
+   card.querySelector('[data-action="going"]').addEventListener("click",()=>toggleEventStatus(ev,"going"));
+   card.querySelector('[data-action="interested"]').addEventListener("click",()=>toggleEventStatus(ev,"interested"));
    g.appendChild(card);
   });
   wrap.appendChild(g);
  });
- grid.appendChild(wrap);
 
- // Update progress bar area to show event count
- document.getElementById("count").textContent = `${EVENTS.length} events`;
- document.getElementById("barFill").style.width = "100%";
+ // Add event button
+ const addEvt = document.createElement("button");
+ addEvt.className="add";
+ addEvt.style.cssText="min-height:80px";
+ addEvt.innerHTML=`<span class="plus">+</span>Add a side event`;
+ addEvt.addEventListener("click",openAddEvent);
+ wrap.appendChild(addEvt);
+
+ grid.appendChild(wrap);
 }
+
+/* ---------- add event ---------- */
+const evtDlg = document.getElementById("addEventDlg");
+function openAddEvent(){ evtDlg.showModal(); document.getElementById("fe-title").focus(); }
+document.getElementById("addEventCancel").addEventListener("click",()=>evtDlg.close());
+document.getElementById("addEventSave").addEventListener("click",()=>{
+ const title = document.getElementById("fe-title").value.trim();
+ if(!title){ document.getElementById("fe-title").focus(); return; }
+ const day = document.getElementById("fe-day").value;
+ const time = document.getElementById("fe-time").value.trim()||"TBD";
+ const location = document.getElementById("fe-location").value.trim()||"TBD";
+ const rsvp = document.getElementById("fe-rsvp").value.trim()||null;
+ if(!state.customEvents) state.customEvents = [];
+ const ev = { day, title, time, location, type:"meetup", description:"Added by you", rsvp };
+ state.customEvents.push(ev);
+ state.events[eventId(ev)] = "going";
+ save();
+ ["fe-title","fe-time","fe-location","fe-rsvp"].forEach(id=>document.getElementById(id).value="");
+ evtDlg.close(); renderEvents(); toast("Event added \u2713");
+});
+evtDlg.addEventListener("click",e=>{ if(e.target===evtDlg) evtDlg.close(); });
 
 /* ---------- add person ---------- */
 const dlg=document.getElementById("addDlg");
@@ -1609,8 +1896,17 @@ document.getElementById("addSave").addEventListener("click",()=>{
 });
 dlg.addEventListener("click",e=>{ if(e.target===dlg) dlg.close(); });
 
-/* ---------- copy list ---------- */
+/* ---------- copy list / export schedule ---------- */
 document.getElementById("copyBtn").addEventListener("click",async ()=>{
+ if(viewMode==="events"){
+  const going = [...EVENTS, ...(state.customEvents||[])].filter(ev=>state.events[eventId(ev)]==="going");
+  if(going.length===0){ toast("Mark some events as going first"); return; }
+  const lines = going.map(ev=>`\u2022 ${ev.title} \u2014 ${ev.time} @ ${ev.location}`);
+  const text = `My schedule @ AI Engineer World's Fair 2026 (${going.length} events):\n`+lines.join("\n");
+  try{ await navigator.clipboard.writeText(text); toast("Schedule copied \u2713"); }
+  catch(e){ toast("Couldn't access clipboard"); }
+  return;
+ }
  const met=people().filter(p=>state.met[p.id]?.met);
  if(met.length===0){ toast("You haven't marked anyone yet"); return; }
  const lines=met.map(p=>{
