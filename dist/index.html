@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Met Tracker · AI Engineer World's Fair 2026</title>
+<meta name="description" content="Track the people you meet at AI Engineer World's Fair 2026. Badge-scan animation, notes, and a shareable list." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>" />
+<style>
+ :root{
+ --ink:#18181F;
+ --ink-soft:#3A3A45;
+ --paper:#FAF9F6;
+ --card:#FFFFFF;
+ --line:#E4E2DA;
+ --line-strong:#D2CFC4;
+ --muted:#8A8780;
+ --signal:#4F46E5;
+ --signal-soft:#ECEBFB;
+ --met:#B8902E;
+ --met-soft:#F6EFD9;
+ --recognize:#9A6BB0;
+ --danger:#B3402F;
+ --radius:14px;
+ --shadow:0 1px 2px rgba(24,24,31,.06),0 8px 24px rgba(24,24,31,.05);
+ --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+ --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+ }
+ *{box-sizing:border-box}
+ html,body{margin:0}
+ body{
+ background:var(--paper);
+ color:var(--ink);
+ font-family:var(--sans);
+ line-height:1.45;
+ -webkit-font-smoothing:antialiased;
+ }
+ .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+
+ .eyebrow{
+ font-family:var(--mono);
+ font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+ color:var(--muted);margin:0 0 10px;
+ }
+ .eyebrow b{color:var(--signal);font-weight:600}
+ h1{
+ font-size:clamp(28px,5vw,42px);
+ line-height:1.04;letter-spacing:-.02em;font-weight:760;margin:0 0 6px;
+ }
+ .sub{color:var(--ink-soft);font-size:15px;margin:0 0 22px;max-width:60ch}
+
+ .progress{
+ display:flex;align-items:baseline;gap:12px;margin:0 0 6px;
+ font-family:var(--mono);font-size:13px;color:var(--ink-soft);
+ }
+ .progress .count{font-size:15px;font-weight:600;color:var(--ink)}
+ .bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0 26px}
+ .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--met),#d9b755);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+ .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 22px}
+ .search{
+ flex:1 1 220px;min-width:180px;display:flex;align-items:center;gap:8px;
+ background:var(--card);border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;
+ }
+ .search input{border:0;outline:0;background:transparent;font-size:14px;width:100%;color:var(--ink);font-family:var(--sans)}
+ .search span{font-family:var(--mono);color:var(--muted);font-size:13px}
+ .chips{display:flex;flex-wrap:wrap;gap:6px}
+ .chip{
+ font-family:var(--mono);font-size:12px;letter-spacing:.02em;
+ padding:7px 11px;border-radius:99px;border:1px solid var(--line-strong);
+ background:var(--card);color:var(--ink-soft);cursor:pointer;transition:.15s;
+ }
+ .chip:hover{border-color:var(--signal);color:var(--signal)}
+ .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+ .ghost{
+ margin-left:auto;font-family:var(--mono);font-size:12px;
+ background:transparent;border:1px solid var(--line-strong);border-radius:99px;
+ padding:7px 12px;cursor:pointer;color:var(--ink-soft);transition:.15s;
+ }
+ .ghost:hover{border-color:var(--signal);color:var(--signal)}
+
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+ .card{
+ position:relative;background:var(--card);border:1px solid var(--line);
+ border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);
+ display:flex;flex-direction:column;gap:12px;transition:border-color .2s,transform .2s;
+ overflow:hidden;
+ }
+ .card.met{border-color:var(--met)}
+ .card.met::before{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ background:linear-gradient(135deg,var(--met-soft) 0%,transparent 42%);opacity:.7;
+ }
+ .scanline{
+ content:"";position:absolute;left:0;right:0;top:0;height:140%;
+ background:linear-gradient(180deg,transparent,rgba(184,144,46,.28),transparent);
+ transform:translateY(-140%);pointer-events:none;
+ }
+ .card.scanning .scanline{animation:scan .7s ease-out 1}
+ @keyframes scan{from{transform:translateY(-140%)}to{transform:translateY(100%)}}
+
+ .row{display:flex;gap:13px;align-items:flex-start;position:relative;z-index:1}
+ .avatar{
+ flex:none;width:50px;height:50px;border-radius:50%;
+ display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px;
+ font-family:var(--sans);box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);position:relative;
+ overflow:hidden;
+ }
+ .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+ .card.met .avatar{box-shadow:inset 0 0 0 2px #fff,0 0 0 3px var(--met)}
+ .stamp{
+ position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;
+ background:var(--met);color:#fff;display:none;place-items:center;font-size:12px;
+ box-shadow:0 1px 4px rgba(184,144,46,.5);z-index:2;
+ }
+ .card.met .stamp{display:grid}
+ .who{min-width:0;flex:1}
+ .name{font-size:18px;font-weight:680;letter-spacing:-.01em;margin:0;line-height:1.15}
+ .role{font-family:var(--mono);font-size:12px;color:var(--muted);margin:3px 0 0;line-height:1.3}
+
+ .tier{
+ font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+ padding:3px 7px;border-radius:6px;font-weight:600;white-space:nowrap;flex:none;
+ }
+ .tier.confirmed{background:var(--signal-soft);color:var(--signal)}
+ .tier.recognize{background:#F2EAF6;color:var(--recognize)}
+
+ .tags{display:flex;flex-wrap:wrap;gap:5px;position:relative;z-index:1}
+ .tag{
+ font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+ background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:3px 7px;
+ }
+ .why{font-size:13.5px;color:var(--ink-soft);margin:0;position:relative;z-index:1}
+ .session{
+ font-family:var(--mono);font-size:11.5px;color:var(--ink);background:var(--paper);
+ border:1px dashed var(--line-strong);border-radius:8px;padding:7px 9px;position:relative;z-index:1;
+ }
+ .session b{color:var(--signal);font-weight:600}
+
+ .links{display:flex;gap:6px;flex-wrap:wrap;position:relative;z-index:1}
+ .links a{
+ font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--ink-soft);
+ border:1px solid var(--line-strong);border-radius:8px;padding:5px 9px;transition:.15s;
+ }
+ .links a:hover{border-color:var(--signal);color:var(--signal);background:var(--signal-soft)}
+
+ .foot{display:flex;align-items:center;gap:10px;margin-top:2px;position:relative;z-index:1}
+ .met-btn{
+ flex:1;font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;
+ border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:10px;padding:9px;
+ transition:.15s;letter-spacing:.02em;
+ }
+ .met-btn:hover{background:var(--ink-soft)}
+ .card.met .met-btn{background:var(--met);border-color:var(--met)}
+ .card.met .met-btn:hover{background:#a07d22}
+ .ts{font-family:var(--mono);font-size:11px;color:var(--met);white-space:nowrap}
+
+ .notes{
+ width:100%;font-family:var(--sans);font-size:13px;color:var(--ink);
+ border:1px solid var(--line);border-radius:9px;padding:8px 10px;resize:vertical;
+ min-height:0;height:38px;background:var(--paper);position:relative;z-index:1;display:none;
+ }
+ .card.met .notes{display:block}
+ .notes:focus{outline:2px solid var(--signal);outline-offset:1px;border-color:var(--signal)}
+ .notes::placeholder{color:var(--muted)}
+
+ .empty{
+ grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted);
+ font-family:var(--mono);font-size:13px;border:1px dashed var(--line-strong);border-radius:var(--radius);
+ }
+
+ .add{
+ border:1px dashed var(--line-strong);background:transparent;color:var(--muted);
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+ min-height:160px;cursor:pointer;font-family:var(--mono);font-size:13px;border-radius:var(--radius);transition:.15s;
+ }
+ .add:hover{border-color:var(--signal);color:var(--signal)}
+ .add .plus{font-size:28px;line-height:1}
+
+ dialog{
+ border:0;border-radius:var(--radius);padding:0;max-width:380px;width:92%;
+ box-shadow:0 20px 60px rgba(24,24,31,.25);
+ }
+ dialog::backdrop{background:rgba(24,24,31,.4)}
+ .dlg{padding:22px}
+ .dlg h2{margin:0 0 4px;font-size:18px}
+ .dlg p{margin:0 0 16px;color:var(--muted);font-size:13px;font-family:var(--mono)}
+ .dlg label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px}
+ .dlg input{width:100%;border:1px solid var(--line-strong);border-radius:9px;padding:9px 11px;font-size:14px;font-family:var(--sans);color:var(--ink)}
+ .dlg input:focus{outline:2px solid var(--signal);outline-offset:1px;border-color:var(--signal)}
+ .dlg-actions{display:flex;gap:8px;margin-top:18px}
+ .dlg-actions button{flex:1;font-family:var(--mono);font-size:13px;font-weight:600;border-radius:9px;padding:10px;cursor:pointer;border:1px solid var(--ink)}
+ .dlg-actions .cancel{background:#fff;color:var(--ink);border-color:var(--line-strong)}
+ .dlg-actions .save{background:var(--ink);color:#fff}
+
+ .toast{
+ position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+ background:var(--ink);color:#fff;font-family:var(--mono);font-size:13px;
+ padding:11px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:99;
+ }
+ .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+ /* ---------- view toggle ---------- */
+ .view-toggle{
+ display:flex;gap:2px;background:var(--line);border-radius:8px;padding:2px;
+ font-family:var(--mono);font-size:12px;
+ }
+ .view-toggle button{
+ padding:5px 10px;border:0;border-radius:6px;cursor:pointer;
+ background:transparent;color:var(--ink-soft);font-family:inherit;font-size:inherit;transition:.15s;
+ }
+ .view-toggle button.active{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+ .view-toggle button:hover:not(.active){color:var(--signal)}
+
+ /* ---------- zoom control ---------- */
+ .zoom-ctrl{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+ .zoom-ctrl.visible{display:flex}
+ .zoom-ctrl input[type=range]{
+ width:80px;accent-color:var(--signal);cursor:pointer;
+ }
+ .zoom-label{min-width:18px;text-align:center;color:var(--ink-soft);font-weight:600}
+
+ /* ---------- faces grid ---------- */
+ .grid.faces{grid-template-columns:repeat(auto-fill,minmax(calc(var(--face-size,100px) + 20px),1fr));gap:12px}
+ .face{
+ display:flex;flex-direction:column;align-items:center;gap:6px;
+ padding:10px 6px;border-radius:var(--radius);cursor:pointer;
+ transition:transform .15s,box-shadow .15s;position:relative;
+ background:var(--card);border:1px solid var(--line);
+ }
+ .face:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+ .face.met{border-color:var(--met)}
+ .face.met::after{
+ content:"\2713";position:absolute;top:6px;right:6px;
+ width:18px;height:18px;border-radius:50%;
+ background:var(--met);color:#fff;font-size:11px;font-weight:700;
+ display:grid;place-items:center;
+ box-shadow:0 1px 3px rgba(184,144,46,.4);
+ }
+ .face .face-avatar{
+ width:var(--avatar-size,72px);height:var(--avatar-size,72px);border-radius:50%;overflow:hidden;
+ display:grid;place-items:center;color:#fff;font-weight:700;font-size:26px;
+ font-family:var(--sans);box-shadow:0 2px 8px rgba(0,0,0,.1);
+ flex:none;
+ }
+ .face.met .face-avatar{box-shadow:0 0 0 3px var(--met),0 2px 8px rgba(0,0,0,.1)}
+ .face .face-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+ .face-name{
+ font-size:var(--face-font,11px);font-weight:600;text-align:center;line-height:1.2;
+ max-width:100%;overflow:hidden;text-overflow:ellipsis;
+ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+ }
+ .face-badge{
+ font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+ padding:2px 5px;border-radius:4px;font-weight:600;
+ }
+ .face-badge.confirmed{background:var(--signal-soft);color:var(--signal)}
+ .face-badge.recognize{background:#F2EAF6;color:var(--recognize)}
+ .face.scanning .face-avatar{animation:face-pop .5s ease-out}
+ @keyframes face-pop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+ @media (prefers-reduced-motion:reduce){
+ *{animation:none!important;transition:none!important}
+ }
+ @media (max-width:520px){
+ .grid:not(.faces){grid-template-columns:1fr}
+ .grid.faces{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+ .ghost{margin-left:0}
+ }
+</style>
+</head>
+<body>
+<div class="wrap">
+ <p class="eyebrow">// AI ENGINEER WORLD'S FAIR 2026 · <b>MET TRACKER</b> · MOSCONE WEST</p>
+ <h1>Who you've scanned in</h1>
+ <p class="sub">A badge-collector for the people worth meeting. Tap <b>Mark as met</b> to scan someone in — it sticks when you leave and come back. Add anyone you run into who isn't on the list.</p>
+
+ <div class="progress">
+ <span class="count" id="count">0 / 0</span>
+ <span id="countLabel">scanned in</span>
+ </div>
+ <div class="bar"><i id="barFill"></i></div>
+
+ <div class="controls">
+ <label class="search">
+ <span>&#x2315;</span>
+ <input id="search" type="text" placeholder="Search name, company, topic..." autocomplete="off" />
+ </label>
+ <div class="chips" id="chips">
+ <button class="chip" data-filter="all" aria-pressed="true">All</button>
+ <button class="chip" data-filter="met" aria-pressed="false">Met</button>
+ <button class="chip" data-filter="unmet" aria-pressed="false">Not yet</button>
+ <button class="chip" data-filter="confirmed" aria-pressed="false">Confirmed speakers</button>
+ <button class="chip" data-filter="recognize" aria-pressed="false">Recognize on sight</button>
+ </div>
+ <div class="view-toggle" id="viewToggle">
+ <button class="active" data-view="cards">Cards</button>
+ <button data-view="faces">Faces</button>
+ </div>
+ <div class="zoom-ctrl" id="zoomCtrl">
+ <span>A</span>
+ <input type="range" id="zoomRange" min="0" max="3" step="1" value="1" />
+ <span style="font-size:14px">A</span>
+ </div>
+ <button class="ghost" id="copyBtn">Copy my list</button>
+ </div>
+
+ <div class="grid" id="grid"></div>
+</div>
+
+<dialog id="addDlg">
+ <div class="dlg">
+ <h2>Add someone you met</h2>
+ <p>Goes straight into your collection.</p>
+ <label for="f-name">Name</label>
+ <input id="f-name" type="text" placeholder="Jane Builder" />
+ <label for="f-org">Company / role</label>
+ <input id="f-org" type="text" placeholder="Staff Eng, Acme" />
+ <label for="f-handle">Link (X, LinkedIn, site — optional)</label>
+ <input id="f-handle" type="text" placeholder="https://x.com/..." />
+ <div class="dlg-actions">
+ <button class="cancel" id="addCancel">Cancel</button>
+ <button class="save" id="addSave">Add &amp; mark met</button>
+ </div>
+ </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED = [
+  {
+    "id": "bhardwaj",
+    "name": "Abhishek Bhardwaj",
+    "role": "Member of Technical Staff, RL & Agent Infrastructure · OpenAI",
+    "tier": "confirmed",
+    "tags": [
+      "Sandboxes",
+      "Agent Infra",
+      "OpenAI"
+    ],
+    "why": "'From fork() to Fleet' — isolation, persistence, and scaling agent sandboxes. Relevant to your GKE multi-agent OpenClaw setup. Built Arrakis (open-source agent sandbox).",
+    "session": "Day 3 · 1:30pm-1:50pm · Track 1",
+    "sessionTitle": "From fork() to Fleet: Designing an Agent Sandbox Cloud Pt 1",
+    "links": {
+      "x": "https://x.com/abshkbh",
+      "linkedin": "https://www.linkedin.com/in/abshkbh"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_abhishek_bhardwaj.jpg"
+  },
+  {
+    "id": "azzam",
+    "name": "Adam Azzam",
+    "role": "Member of Product Staff · Modal",
+    "tier": "confirmed",
+    "tags": [
+      "Environments",
+      "Infra"
+    ],
+    "why": "'Don't build agents, build environments.' The reproducible-environment problem you live in day to day.",
+    "session": "Day 3 · 10:45am-11:05am · Track 1",
+    "sessionTitle": "Don’t build agents, build environments",
+    "links": {
+      "x": "https://x.com/aaazzam",
+      "linkedin": "https://linkedin.com/in/adam-azzam",
+      "site": "https://adamazzam.com"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_adam_azzam.jpg"
+  },
+  {
+    "id": "huda",
+    "name": "Adam Huda",
+    "role": "Sr Engineering Leader for AI Dev Tools · Uber",
+    "tier": "confirmed",
+    "tags": [
+      "Agentic SDLC",
+      "Software Factory",
+      "Uber"
+    ],
+    "why": "His talk is almost a mirror of your APEX thesis — 70% of Uber PRs AI-attributed, 15% fully autonomous. Highest-value hallway conversation on the list.",
+    "session": "Day 2 · 11:40am-12:00pm · Leadership 1",
+    "sessionTitle": "The AI-Native Software Factory: How Uber Agentified Every Stage of the SDLC",
+    "links": {
+      "x": "https://x.com/hudaman",
+      "linkedin": "https://www.linkedin.com/in/thinktopdown/",
+      "site": "https://adamhuda.com"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_adam_huda.jpg"
+  },
+  {
+    "id": "addy",
+    "name": "Addy Osmani",
+    "role": "Director of Engineering · Independent",
+    "tier": "confirmed",
+    "tags": [
+      "Closing Keynote",
+      "Dev Tools"
+    ],
+    "why": "14+ years leading dev experience at Google. A genuine celebrity in the web-dev-to-AI pipeline.",
+    "session": "Day 3 · 4:30pm-4:50pm · Main Stage · (keynote)",
+    "sessionTitle": "Closing Keynote",
+    "links": {
+      "x": "https://x.com/addyosmani",
+      "linkedin": "https://www.linkedin.com/in/addyosmani/",
+      "site": "https://addyosmani.com"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_addy_osmani.jpg"
+  },
+  {
+    "id": "adi",
+    "name": "Adi Singh",
+    "role": "Co-founder · AgentMail",
+    "tier": "confirmed",
+    "tags": [
+      "Agent Identity",
+      "YC S25",
+      "OpenClaw"
+    ],
+    "why": "His talk literally references openclaw — building the identity layer for non-human agents. Worth finding given your own OpenClaw work.",
+    "session": "Day 3 · 2:50pm-3:10pm · Track 1",
+    "sessionTitle": "The Next Trillion Users of the Internet Still Don't Have an Identity",
+    "links": {
+      "x": "https://x.com/adisingh",
+      "linkedin": "https://linkedin.com/in/adivirsingh13",
+      "site": "https://www.agentmail.to/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_adi_singh.jpg"
+  },
+  {
+    "id": "swyx",
+    "name": "swyx",
+    "role": "Curator · Latent Space / AI Engineer",
+    "tier": "confirmed",
+    "tags": [
+      "Host",
+      "Main Stage",
+      "Latent Space"
+    ],
+    "why": "Runs the whole conference and coined 'the AI Engineer.' If you meet one name, it's him. Easy to find on the main stage between keynotes.",
+    "session": "Day 2 · 9:00am-9:05am · Main Stage · (keynote)",
+    "sessionTitle": "Three Years of AI Engineering",
+    "links": {
+      "x": "https://x.com/swyx"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_shawn_wang.jpg"
+  },
+  {
+    "id": "simonw",
+    "name": "Simon Willison",
+    "role": "Independent, co-creator of Django",
+    "tier": "recognize",
+    "tags": [
+      "Builder celeb",
+      "Security"
+    ],
+    "why": "THE builder-celeb for this crowd — coined 'prompt injection,' the 'lethal trifecta,' and the pelican-on-a-bicycle benchmark.",
+    "session": null,
+    "links": {
+      "x": "https://x.com/simonw",
+      "site": "https://simonwillison.net"
+    },
+    "photoUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Simon_Willison_%282929211382%29_%28cropped%29.jpg/250px-Simon_Willison_%282929211382%29_%28cropped%29.jpg",
+    "sessionTitle": null
+  },
+  {
+    "id": "karpathy",
+    "name": "Andrej Karpathy",
+    "role": "Independent, ex-OpenAI, Tesla",
+    "tier": "recognize",
+    "tags": [
+      "Patron saint",
+      "Unconfirmed"
+    ],
+    "why": "Coined 'vibe coding' and the LLM-OS framing. Recognize on sight; attendance unconfirmed.",
+    "session": null,
+    "links": {
+      "x": "https://x.com/karpathy"
+    },
+    "photoUrl": "https://karpathy.ai/assets/me_new.jpg",
+    "sessionTitle": null
+  },
+  {
+    "id": "srush",
+    "name": "Sasha Rush",
+    "role": "Cursor, researcher",
+    "tier": "recognize",
+    "tags": [
+      "Cursor Composer",
+      "Unconfirmed"
+    ],
+    "why": "Known for the technical journey behind Cursor Composer. Rotates through these stages; attendance unconfirmed.",
+    "session": null,
+    "links": {
+      "x": "https://x.com/srush_nlp"
+    },
+    "photoUrl": "https://simons.berkeley.edu/sites/default/files/styles/post_card_lg_2x/public/profiles/35882%2520%25283%2529_5.jpeg.jpg?h=c35ab9d9&itok=T84HV2uv",
+    "sessionTitle": null
+  },
+  {
+    "id": "nassr",
+    "name": "Matt Nassr",
+    "role": "Head of Global Data Eng & AI Transformation, Optiver",
+    "tier": "confirmed",
+    "tags": [
+      "Agentic SDLC",
+      "Governance"
+    ],
+    "why": "Hosts the Agentic SDLC Loop session on shared foundations: context, evaluation, execution, governance. The governance angle maps to your CNA Stewards / procurement concerns.",
+    "session": "Day 2 · Tue · 7:30 PM · side event (Optiver)",
+    "links": {},
+    "photoUrl": "https://cdn.theorg.com/d97edf34-ecb8-40e3-90b5-2771017c06f2_medium.jpg",
+    "sessionTitle": null
+  },
+  {
+    "id": "manoj_nair",
+    "name": "Manoj Nair",
+    "role": "CTO & Chief Innovation Officer · Snyk",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "Through the AI Fog: The architectural decision the next 24 months of agentic security depends on.",
+    "session": "Day 2 · 10:45am-11:05am · Track 5",
+    "sessionTitle": "Through the AI Fog: The architectural decision the next 24 months of agentic security depends on.",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/mnair1"
+    },
+    "photoUrl": "https://res.cloudinary.com/snyk/image/upload/v1681914119/headshot-manoj-snyk.jpg"
+  },
+  {
+    "id": "lovina_dmello",
+    "name": "Lovina Dmello",
+    "role": "Senior Software Developer · NVIDIA",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "Your LLM Stack Is a 2008 Database With Better Marketing: Why ML Security Is Dominated by Misconfiguration, Not Missing Features",
+    "session": "Day 2 · 11:10am-11:30am · Track 5",
+    "sessionTitle": "Your LLM Stack Is a 2008 Database With Better Marketing: Why ML Security Is Dominated by Misconfiguration, Not Missing Features",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/lovina25"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_lovina_dmello.jpg"
+  },
+  {
+    "id": "jesse_lumarie",
+    "name": "Jesse Lumarie",
+    "role": "Software Engineer · Figma",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "Building the engine while flying the plane — launching the Figma MCP server",
+    "session": "Day 2 · 11:10am-11:30am · Leadership 1",
+    "sessionTitle": "Building the engine while flying the plane — launching the Figma MCP server",
+    "links": {
+      "x": "https://x.com/jesselumarie",
+      "linkedin": "https://www.linkedin.com/in/jesselumarie/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_jesse_lumarie.jpg"
+  },
+  {
+    "id": "moritz_johner",
+    "name": "Moritz Johner",
+    "role": "Staff Engineer · Form3",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "We Gave an Agent Production Code Access and Then Tried to Sleep at Night",
+    "session": "Day 2 · 11:40am-12:00pm · Track 5",
+    "sessionTitle": "We Gave an Agent Production Code Access and Then Tried to Sleep at Night",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/moritz-johner/",
+      "site": "https://www.form3.tech/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_moritz_johner.jpg"
+  },
+  {
+    "id": "uday_kiran_medisetty",
+    "name": "Uday Kiran Medisetty",
+    "role": "Distinguished Engineer · Uber",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "The AI-Native Software Factory: How Uber Agentified Every Stage of the SDLC",
+    "session": "Day 2 · 11:40am-12:00pm · Leadership 1",
+    "sessionTitle": "The AI-Native Software Factory: How Uber Agentified Every Stage of the SDLC",
+    "links": {
+      "x": "https://x.com/udaykiran",
+      "linkedin": "https://www.linkedin.com/in/udaykiran/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_uday_kiran_medisetty.jpg"
+  },
+  {
+    "id": "ezra_tanzer",
+    "name": "Ezra Tanzer",
+    "role": "Director, Product Management · Snyk",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "Agentic Development Security",
+    "session": "Day 2 · 12:05pm-12:25pm · Track 5",
+    "sessionTitle": "Agentic Development Security",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/ezra-tanzer-5a187423"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_tbd_snyk.jpg"
+  },
+  {
+    "id": "will_bond",
+    "name": "Will Bond",
+    "role": "Staff Software Engineer · Uber",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "Scaling Code Quality: Building uReview, Uber’s Multi-Agent Code Review Engine",
+    "session": "Day 2 · 12:05pm-12:25pm · Leadership 1",
+    "sessionTitle": "Scaling Code Quality: Building uReview, Uber’s Multi-Agent Code Review Engine",
+    "links": {
+      "x": "https://x.com/wbond",
+      "linkedin": "http://linkedin.com/in/wbond"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_will_bond.jpg"
+  },
+  {
+    "id": "ameya_ketkar",
+    "name": "Ameya Ketkar",
+    "role": "Software Engineer · Uber Technology Inc.",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "Scaling Code Quality: Building uReview, Uber’s Multi-Agent Code Review Engine",
+    "session": "Day 2 · 12:05pm-12:25pm · Leadership 1",
+    "sessionTitle": "Scaling Code Quality: Building uReview, Uber’s Multi-Agent Code Review Engine",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/ameya-ketkar",
+      "site": "https://scholar.google.com/citations?user=6JO46GMAAAAJ&hl=en"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_ameya_ketkar.jpg"
+  },
+  {
+    "id": "eugene_yan",
+    "name": "Eugene Yan",
+    "role": "Member of Technical Staff · Anthropic",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "Using LLMs to Secure Source Code",
+    "session": "Day 2 · 1:30pm-1:50pm · Track 5",
+    "sessionTitle": "Using LLMs to Secure Source Code",
+    "links": {
+      "x": "https://x.com/eugeneyan"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_eugene_yan.jpg"
+  },
+  {
+    "id": "ethan_jung_min_cha",
+    "name": "Ethan (Jung Min) Cha",
+    "role": "AI Development Lead · The Carlyle Group",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "Dual-Surface Architecture: Serving Humans and Agents from the Same Tool Layer",
+    "session": "Day 2 · 1:55pm-2:15pm · Track 5",
+    "sessionTitle": "Dual-Surface Architecture: Serving Humans and Agents from the Same Tool Layer",
+    "links": {
+      "linkedin": "https://linkedin.com/in/ethancha0411",
+      "site": "https://ethancha.net"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_ethan_cha.jpg"
+  },
+  {
+    "id": "nachiket_paranjape",
+    "name": "Nachiket Paranjape",
+    "role": "Software Engineer · DoorDash",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "AI Evals Platform for Cross-Functional Teams at Scale",
+    "session": "Day 2 · 1:55pm-2:15pm · Leadership 1",
+    "sessionTitle": "AI Evals Platform for Cross-Functional Teams at Scale",
+    "links": {
+      "x": "https://x.com/nmparanjape",
+      "linkedin": "https://www.linkedin.com/in/nachiketparanjape/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_nachiket_paranjape.jpg"
+  },
+  {
+    "id": "swaroop_chitlur_haridas",
+    "name": "Swaroop Chitlur Haridas",
+    "role": "DoorDash",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "AI Evals Platform for Cross-Functional Teams at Scale",
+    "session": "Day 2 · 1:55pm-2:15pm · Leadership 1",
+    "sessionTitle": "AI Evals Platform for Cross-Functional Teams at Scale",
+    "links": {},
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_swaroop_chitlur_haridas.jpg"
+  },
+  {
+    "id": "steve_yegge",
+    "name": "Steve Yegge",
+    "role": "Icon · Gas Town",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "Agentic Security: Permissions, Provenance, and the Agent Supply Chain",
+    "session": "Day 2 · 2:25pm-2:45pm · Track 5",
+    "sessionTitle": "Agentic Security: Permissions, Provenance, and the Agent Supply Chain",
+    "links": {
+      "x": "https://x.com/steve_yegge"
+    },
+    "photoUrl": "https://yegge.ai/photo-web.jpg"
+  },
+  {
+    "id": "kanish_manuja",
+    "name": "Kanish Manuja",
+    "role": "Principal Software Engineer · Twilio Inc.",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "Productionizing LLM Gateways: Architecture, Tradeoffs, and Hard Lessons from the Trenches",
+    "session": "Day 2 · 2:25pm-2:45pm · Leadership 1",
+    "sessionTitle": "Productionizing LLM Gateways: Architecture, Tradeoffs, and Hard Lessons from the Trenches",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/kanish-manuja-a99bb923/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_kanish_manuja.jpg"
+  },
+  {
+    "id": "kim_maida",
+    "name": "Kim Maida",
+    "role": "Founding GTM Engineer · Keycard",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "It's 10pm. Do You Know Where Your Agents Are?",
+    "session": "Day 2 · 2:50pm-3:10pm · Track 5",
+    "sessionTitle": "It's 10pm. Do You Know Where Your Agents Are?",
+    "links": {
+      "x": "https://x.com/kimmaida",
+      "linkedin": "https://linkedin.com/in/kimmaida",
+      "site": "https://maida.kim"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_kim_maida.jpg"
+  },
+  {
+    "id": "clare_liguori",
+    "name": "Clare Liguori",
+    "role": "Senior Principal Engineer · Amazon Web Services",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "From AI-Assisted to AI-Native: Building a Frontier Development Team",
+    "session": "Day 2 · 2:50pm-3:10pm · Leadership 1",
+    "sessionTitle": "From AI-Assisted to AI-Native: Building a Frontier Development Team",
+    "links": {
+      "x": "https://x.com/clare_liguori",
+      "linkedin": "https://www.linkedin.com/in/clareliguori/",
+      "site": "https://clare.dev/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_clare_liguori.jpg"
+  },
+  {
+    "id": "aaron_stanley",
+    "name": "Aaron Stanley",
+    "role": "CISO · dbt Labs",
+    "tier": "confirmed",
+    "tags": [
+      "Security"
+    ],
+    "why": "AI’s Jurassic Park Period",
+    "session": "Day 2 · 3:20pm-3:40pm · Track 5",
+    "sessionTitle": "AI’s Jurassic Park Period",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/aastanley"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_aaron_stanley.jpg"
+  },
+  {
+    "id": "eyal_blum",
+    "name": "Eyal Blum",
+    "role": "Software Engineer · Figma",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "How to Get Your Org to Adopt Coding Agents (Without Shipping Garbage)",
+    "session": "Day 2 · 3:20pm-3:40pm · Leadership 1",
+    "sessionTitle": "How to Get Your Org to Adopt Coding Agents (Without Shipping Garbage)",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/eyalg/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_eyal_blum.jpg"
+  },
+  {
+    "id": "oscar_mullin",
+    "name": "Oscar Mullin",
+    "role": "Sr. VP of Tech · MercadoLibre",
+    "tier": "confirmed",
+    "tags": [
+      "AI-Native Enterprises"
+    ],
+    "why": "AI-transforming 18K engineers, 40K repos, and an agent swarm: what worked, what didn't",
+    "session": "Day 2 · 3:45pm-4:05pm · Leadership 1",
+    "sessionTitle": "AI-transforming 18K engineers, 40K repos, and an agent swarm: what worked, what didn't",
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/oscarmullin/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_oscar_mullin.jpg"
+  },
+  {
+    "id": "lukas_petersson",
+    "name": "Lukas Petersson",
+    "role": "Co-Founder · Andon Labs",
+    "tier": "confirmed",
+    "tags": [
+      "Evals"
+    ],
+    "why": "Vending-Bench: Long-Horizon Agent Evals for a Simulated Vending Business",
+    "session": "Day 3 · 10:45am-11:05am · Track 5",
+    "sessionTitle": "Vending-Bench: Long-Horizon Agent Evals for a Simulated Vending Business",
+    "links": {
+      "x": "https://x.com/lukaspet",
+      "linkedin": "https://www.linkedin.com/in/lukas-petersson-181a83172/",
+      "site": "https://lukaspet.substack.com/"
+    },
+    "photoUrl": "https://www.ai.engineer/wf26/speakers/by-id/spk_lukas_petersson.jpg"
+  }
+];
+
+const STORAGE_KEY = "aiewf2026_tracker_v1";
+let state = { met:{}, custom:[] };
+let activeFilter = "all";
+let query = "";
+let viewMode = "cards";
+
+const grid = document.getElementById("grid");
+const toastEl = document.getElementById("toast");
+
+/* ---------- storage (localStorage) ---------- */
+function load(){
+ try{
+ const raw = localStorage.getItem(STORAGE_KEY);
+ if(raw){ state = JSON.parse(raw); }
+ }catch(e){ /* first run */ }
+ if(!state.met) state.met = {};
+ if(!state.custom) state.custom = [];
+}
+let saveTimer=null;
+function save(){
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(()=>{
+ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+ catch(e){ toast("Couldn't save — storage unavailable"); }
+ },250);
+}
+
+/* ---------- helpers ---------- */
+function people(){ return [...SEED, ...state.custom]; }
+function initials(name){
+ const clean = name.replace(/\(.*?\)/g,"").trim();
+ const parts = clean.split(/\s+/).filter(Boolean);
+ return ((parts[0]?.[0]||"") + (parts[1]?.[0]||"")).toUpperCase() || "?";
+}
+function hue(str){ let h=0; for(const c of str) h=(h*31+c.charCodeAt(0))%360; return h; }
+function avatarBg(name){
+ const h=hue(name);
+ return `background:linear-gradient(135deg,hsl(${h} 42% 52%),hsl(${(h+28)%360} 46% 40%))`;
+}
+function linkLabel(k){ return {x:"X / Twitter", linkedin:"LinkedIn", site:"Website"}[k]||k; }
+function fmtTime(ts){
+ const d=new Date(ts);
+ return d.toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"});
+}
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+/* ---------- render ---------- */
+function passesFilter(p){
+ const m = !!state.met[p.id]?.met;
+ if(activeFilter==="met" && !m) return false;
+ if(activeFilter==="unmet" && m) return false;
+ if(activeFilter==="confirmed" && p.tier!=="confirmed") return false;
+ if(activeFilter==="recognize" && p.tier!=="recognize") return false;
+ if(query){
+ const hay=(p.name+" "+p.role+" "+(p.tags||[]).join(" ")+" "+(p.why||"")+" "+(p.sessionTitle||"")).toLowerCase();
+ if(!hay.includes(query)) return false;
+ }
+ return true;
+}
+
+function avatarHTML(p){
+ if(p.photoUrl){
+ return `<div class="avatar" style="${avatarBg(p.name)}"><img src="${esc(p.photoUrl)}" alt="" loading="lazy" onerror="this.remove();this.parentNode.textContent='${initials(p.name)}'"><span class="stamp">\u2713</span></div>`;
+ }
+ return `<div class="avatar" style="${avatarBg(p.name)}">${initials(p.name)}<span class="stamp">\u2713</span></div>`;
+}
+
+function render(){
+ const all = people();
+ const metCount = all.filter(p=>state.met[p.id]?.met).length;
+ document.getElementById("count").textContent = `${metCount} / ${all.length}`;
+ document.getElementById("barFill").style.width = all.length? (metCount/all.length*100)+"%" : "0%";
+
+ const list = all.filter(passesFilter);
+ grid.innerHTML="";
+
+ if(viewMode==="faces"){
+ grid.classList.add("faces");
+ renderFaces(list);
+ applyZoom();
+ }else{
+ grid.classList.remove("faces");
+ renderCards(list);
+ }
+
+ if(list.length===0){
+ const e=document.createElement("div");
+ e.className="empty";
+ e.textContent = query ? `No one matches "${query}".` : "Nothing here yet.";
+ grid.insertBefore(e, grid.firstChild);
+ }
+}
+
+function renderCards(list){
+ list.forEach(p=>{
+ const m = state.met[p.id]||{};
+ const card=document.createElement("article");
+ card.className="card"+(m.met?" met":"");
+ card.dataset.id=p.id;
+
+ const tierLabel = p.tier==="confirmed" ? "Confirmed" : "Recognize";
+ const sessionHTML = p.session ? `<div class="session"><b>Session</b> \u00b7 ${esc(p.session)}</div>` : "";
+ const tagsHTML = (p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+ const linksHTML = Object.entries(p.links||{}).filter(([_,v])=>v)
+ .map(([k,v])=>`<a href="${esc(v)}" target="_blank" rel="noopener noreferrer">${linkLabel(k)} \u2197</a>`).join("");
+
+ card.innerHTML = `
+ <div class="scanline"></div>
+ <div class="row">
+ ${avatarHTML(p)}
+ <div class="who">
+ <p class="name">${esc(p.name)}</p>
+ <p class="role">${esc(p.role)}</p>
+ </div>
+ <span class="tier ${p.tier}">${tierLabel}</span>
+ </div>
+ ${tagsHTML?`<div class="tags">${tagsHTML}</div>`:""}
+ <p class="why">${esc(p.why||"")}</p>
+ ${sessionHTML}
+ ${linksHTML?`<div class="links">${linksHTML}</div>`:""}
+ <div class="foot">
+ <button class="met-btn">${m.met?"\u2713 Met":"Mark as met"}</button>
+ ${m.met&&m.ts?`<span class="ts">${fmtTime(m.ts)}</span>`:""}
+ </div>
+ <textarea class="notes" placeholder="Where / what you talked about\u2026">${m.notes||""}</textarea>
+ `;
+
+ card.querySelector(".met-btn").addEventListener("click",()=>toggleMet(p.id,card));
+ const ta=card.querySelector(".notes");
+ ta.addEventListener("input",()=>{
+ if(!state.met[p.id]) state.met[p.id]={met:true,ts:Date.now()};
+ state.met[p.id].notes=ta.value; save();
+ });
+ grid.appendChild(card);
+ });
+
+ if(activeFilter==="all"||activeFilter==="unmet"||activeFilter==="met"){
+ const add=document.createElement("button");
+ add.className="add";
+ add.innerHTML=`<span class="plus">+</span>Add someone you met`;
+ add.addEventListener("click",openAdd);
+ grid.appendChild(add);
+ }
+}
+
+function faceAvatarHTML(p){
+ if(p.photoUrl){
+ return `<div class="face-avatar" style="${avatarBg(p.name)}"><img src="${esc(p.photoUrl)}" alt="" loading="lazy" onerror="this.remove();this.parentNode.textContent='${initials(p.name)}'"></div>`;
+ }
+ return `<div class="face-avatar" style="${avatarBg(p.name)}">${initials(p.name)}</div>`;
+}
+
+function renderFaces(list){
+ list.forEach(p=>{
+ const m = state.met[p.id]||{};
+ const face=document.createElement("div");
+ face.className="face"+(m.met?" met":"");
+ face.dataset.id=p.id;
+
+ const shortName = p.name.replace(/\(.*?\)/g,"").trim();
+ const tierLabel = p.tier==="confirmed" ? "Confirmed" : "Recognize";
+
+ face.innerHTML = `
+ ${faceAvatarHTML(p)}
+ <span class="face-name">${esc(shortName)}</span>
+ <span class="face-badge ${p.tier}">${tierLabel}</span>
+ `;
+
+ face.addEventListener("click",()=>{
+ toggleMet(p.id, face);
+ if(!state.met[p.id]?.met){ face.classList.remove("scanning"); }
+ else{ face.classList.add("scanning"); setTimeout(()=>face.classList.remove("scanning"),500); }
+ });
+ grid.appendChild(face);
+ });
+
+ if(activeFilter==="all"||activeFilter==="unmet"||activeFilter==="met"){
+ const add=document.createElement("div");
+ add.className="face";
+ add.style.cssText="cursor:pointer;border-style:dashed;color:var(--muted)";
+ add.innerHTML=`<div class="face-avatar" style="background:var(--line);color:var(--muted);font-size:28px">+</div><span class="face-name">Add person</span>`;
+ add.addEventListener("click",openAdd);
+ grid.appendChild(add);
+ }
+}
+
+function toggleMet(id,card){
+ const cur=state.met[id]?.met;
+ if(cur){
+ state.met[id]={...state.met[id],met:false};
+ toast("Unmarked");
+ }else{
+ state.met[id]={...(state.met[id]||{}),met:true,ts:Date.now()};
+ if(card){ card.classList.add("scanning"); setTimeout(()=>card.classList.remove("scanning"),700); }
+ toast("Scanned in \u2713");
+ }
+ save(); render();
+}
+
+/* ---------- filters / search ---------- */
+document.getElementById("chips").addEventListener("click",e=>{
+ const b=e.target.closest(".chip"); if(!b) return;
+ activeFilter=b.dataset.filter;
+ [...document.querySelectorAll(".chip")].forEach(c=>c.setAttribute("aria-pressed", c===b));
+ render();
+});
+document.getElementById("search").addEventListener("input",e=>{ query=e.target.value.trim().toLowerCase(); render(); });
+
+/* ---------- view toggle + zoom ---------- */
+const ZOOM_STEPS = [
+ { face: 80, avatar: 56, name: 10 },
+ { face: 100, avatar: 72, name: 11 },
+ { face: 140, avatar: 100, name: 12 },
+ { face: 190, avatar: 140, name: 13 },
+];
+const zoomRange = document.getElementById("zoomRange");
+const zoomCtrl = document.getElementById("zoomCtrl");
+
+function applyZoom(){
+ const z = ZOOM_STEPS[+zoomRange.value];
+ grid.style.setProperty("--face-size", z.face+"px");
+ grid.style.setProperty("--avatar-size", z.avatar+"px");
+ grid.style.setProperty("--face-font", z.name+"px");
+}
+
+document.getElementById("viewToggle").addEventListener("click",e=>{
+ const b=e.target.closest("[data-view]"); if(!b) return;
+ viewMode=b.dataset.view;
+ [...document.querySelectorAll("#viewToggle button")].forEach(c=>c.classList.toggle("active",c===b));
+ zoomCtrl.classList.toggle("visible", viewMode==="faces");
+ render();
+ if(viewMode==="faces") applyZoom();
+});
+zoomRange.addEventListener("input",()=>{ applyZoom(); });
+
+/* ---------- add person ---------- */
+const dlg=document.getElementById("addDlg");
+function openAdd(){ dlg.showModal(); document.getElementById("f-name").focus(); }
+document.getElementById("addCancel").addEventListener("click",()=>dlg.close());
+document.getElementById("addSave").addEventListener("click",()=>{
+ const name=document.getElementById("f-name").value.trim();
+ if(!name){ document.getElementById("f-name").focus(); return; }
+ const org=document.getElementById("f-org").value.trim();
+ const handle=document.getElementById("f-handle").value.trim();
+ const id="custom_"+Date.now();
+ const links={};
+ if(handle){
+ if(/linkedin/i.test(handle)) links.linkedin=handle;
+ else if(/x\.com|twitter/i.test(handle)) links.x=handle;
+ else links.site=handle;
+ }
+ state.custom.push({ id, name, role:org||"Added by you", tier:"confirmed", tags:["Your add"], why:"", session:null, sessionTitle:null, links, photoUrl:null });
+ state.met[id]={met:true,ts:Date.now()};
+ save();
+ ["f-name","f-org","f-handle"].forEach(i=>document.getElementById(i).value="");
+ dlg.close(); render(); toast("Added \u2713");
+});
+dlg.addEventListener("click",e=>{ if(e.target===dlg) dlg.close(); });
+
+/* ---------- copy list ---------- */
+document.getElementById("copyBtn").addEventListener("click",async ()=>{
+ const met=people().filter(p=>state.met[p.id]?.met);
+ if(met.length===0){ toast("You haven't marked anyone yet"); return; }
+ const lines=met.map(p=>{
+ const n=state.met[p.id]?.notes;
+ return `\u2022 ${p.name} \u2014 ${p.role}${n?` (${n})`:""}`;
+ });
+ const text=`People I met @ AI Engineer World's Fair 2026 (${met.length}):\n`+lines.join("\n");
+ try{ await navigator.clipboard.writeText(text); toast("Copied your list \u2713"); }
+ catch(e){ toast("Couldn't access clipboard"); }
+});
+
+/* ---------- toast ---------- */
+let toastTimer=null;
+function toast(msg){
+ toastEl.textContent=msg; toastEl.classList.add("show");
+ clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove("show"),1800);
+}
+
+/* ---------- boot ---------- */
+load(); render();
+</script>
+</body>
+</html>
